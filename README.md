@@ -5,9 +5,9 @@
 
 # **Introduction**
 
-This repository contains a suite of Jupyter notebooks designed to demonstrate how to explore, query, and retrieve data from the [ESO Science Archive](https://archive.eso.org/cms.html) using Python. The primary interface used is the `astroquery.eso` module, which is part of the broader [Astroquery](https://astroquery.readthedocs.io/en/latest/) package developed under the Astropy ecosystem.
+This repository contains a suite of Jupyter notebooks designed to demonstrate how to explore, query, and retrieve data from the [ESO Science Archive](https://archive.eso.org/cms.html) using Python. The primary interface used is the `astroquery.eso` module, which is part of the broader [astroquery](https://astroquery.readthedocs.io/en/latest/) package developed under the Astropy ecosystem.
 
-These notebooks walk through both introductory and advanced examples that are relevant for a wide range of scientific use cases — from downloading raw and reduced data products, to analyzing spectra and imaging datasets retrieved from ESO facilities at La Silla and Paranal (including the Very Large Telescope), as well as from submillimeter and radio observatories -- APEX and ALMA.
+These notebooks walk through both introductory and advanced examples that are relevant for a wide range of scientific use cases — from downloading raw and reduced data products, to analyzing spectra and imaging datasets retrieved from ESO facilities at La Silla and Paranal (including the Very Large Telescope - VLT - and the Very Large Telescope Interferometer - VLTI), as well as from submillimeter and radio observatories -- APEX and ALMA.
 
 Whether you're new to archival astronomy or already familiar with ESO's observing systems, these examples provide practical guidance for integrating archive queries into reproducible, scriptable workflows.
 
@@ -26,6 +26,10 @@ from astroquery.eso import Eso  # Import the ESO module from astroquery
 eso = Eso()                     # Create an instance of the ESO class
 eso                             # Display the class instance (e.g. check login status, default settings)
 ```
+
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/git/https%3A%2F%2Fgithub.com%2Feso%2Fastroquery_examples/main?urlpath=%2Fdoc%2Ftree%2FESO_Introduction.ipynb)
+
+**You can try it directly [in mybinder](https://mybinder.org/v2/git/https%3A%2F%2Fgithub.com%2Feso%2Fastroquery_examples/main), without installing anything.**
 
 Once initialized, you can search by program ID, target name, position, or instrument, and download data products directly into your working directory — all from within the notebook environment.
 
