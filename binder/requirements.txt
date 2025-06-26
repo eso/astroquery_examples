@@ -1,4 +1,9 @@
 astropy
 numpy
 matplotlib
+pandas
+ipyaladin
+astral
+coronograph
+PyAstronomy
 git+https://github.com/juanmcloaiza/astroquery.git@TAP
