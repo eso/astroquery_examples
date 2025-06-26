@@ -4,6 +4,6 @@ matplotlib
 pandas
 ipyaladin
 astral
-coronograph
+coronagraph
 PyAstronomy
 git+https://github.com/juanmcloaiza/astroquery.git@TAP
