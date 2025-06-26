@@ -6,4 +6,5 @@ ipyaladin
 astral
 coronagraph
 PyAstronomy
+tqdm
 git+https://github.com/juanmcloaiza/astroquery.git@TAP
