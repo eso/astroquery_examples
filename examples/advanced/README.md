@@ -25,5 +25,5 @@ Expect more moving parts, larger queries, and longer runtimes.
 - **07_multi_instrument_overlap_download.ipynb** — Find targets with multi-instrument coverage; batch downloads.
 
 ## Folders
-- 📁 **data/** — outputs written/read by notebooks (kept small; larger data are fetched on demand).
+- 📁 **data/** — outputs written/read by notebooks.
 - 🖼️ **figures/** — images/animations produced by the notebooks.

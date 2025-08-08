@@ -14,5 +14,5 @@ Curated to highlight newly ingested datasets and how to work with them in practi
   ⬇️ download, ✂️ make a SODA cutout, and 🔎 produce a quick look with `astroquery.eso`.
 
 ## Folders
-- 📁 **data/** — outputs written/read by notebooks (kept small; larger data are fetched on demand).
+- 📁 **data/** — outputs written/read by notebooks.
 - 🖼️ **figures/** — images/animations produced by the notebooks.

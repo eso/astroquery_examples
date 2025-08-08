@@ -3,7 +3,7 @@
   ESO Science Archive - Jupyter Notebooks
 </h1>
 
-# 🧰 Simple examples
+# 🌱 Simple examples
 
 Small, self-contained notebooks that illustrate one `astroquery.eso` capability at a time.
 Designed for quick copy/paste and minimal setup.
