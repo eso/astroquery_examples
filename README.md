@@ -13,9 +13,31 @@ Whether you're new to archival astronomy or already familiar with ESO's observin
 
 ## 📚 Included Notebooks
 
-- `ESO_Introduction.ipynb` — Introduction to `astroquery.eso` and its basic functionality (e.g. listing instruments, setting credentials)
-- `ESO_Query_*.ipynb` — Focused demonstrations of specific search and filtering operations using TAP queries, cone searches, and dataset metadata
-- `ESO_WorkingExample_*.ipynb` — Real-world examples combining archive access with data inspection, plotting, and scientific analysis (e.g. radial velocities, spectral line studies)
+All example notebooks live under the `examples/` directory:
+
+```text
+examples/
+├── simple/      # Getting-started scripts
+└── advanced/    # In-depth, specialized recipes
+```
+
+- **`ESO_Introduction.ipynb`**  
+  A hands-on tour of `astroquery.eso`:  
+  – Listing instruments & data collections  
+  – Resolving targets & coordinates  
+  – Setting up and using your ESO credentials  
+
+- **`simple/ESO_Query_*.ipynb`**  
+  Focused demos of core query patterns:  
+  – Cone searches  
+  – ADQL/TAP queries against ESO archives  
+  – Filtering by wavelength, time, SNR, etc.  
+
+- **`advanced/ESO_WorkingExample_*.ipynb`**  
+  End-to-end workflows combining:  
+  – Archive access and data download  
+  – Data inspection and plotting  
+  – Scientific analyses (e.g. radial velocities, spectral-line studies)
 
 ## Quick Start: Using `astroquery.eso`
 
