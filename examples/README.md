@@ -11,7 +11,7 @@ A guided tour of notebooks for working with the ESO Science Archive via `astroqu
 
 * **[`simple/`](./simple/)** — 🌱 Minimal, single-feature recipes (copy/paste friendly; quick to run).
 * **[`advanced/`](./advanced/)** — 🚀 Scenario-driven workflows that combine multiple functions.
-* **[`collections/`](./collections/)** — 🌌 Curated, collection-specific case studies (often tied to new Phase 3 releases).
+* **[`highlights/`](./highlights/)** — 🌌 Curated, collection-specific case studies (often tied to new Phase 3 collections/releases).
 
 ## Start here
 
@@ -28,5 +28,5 @@ A guided tour of notebooks for working with the ESO Science Archive via `astroqu
 ## Tips
 
 * If a cell hangs on download, check network/VPN and rerun the cell.
-* For TAP/ADQL quirks, start with `simple/06_query_tap.ipynb`, then see `advanced/` for real-world patterns.
+* For TAP/ADQL quirks, start with `simple/06_query_tap.ipynb`, then see `advanced/` for more real-world examples.
 * Opening issues/PRs with additional notebooks is 💯 welcome!!
