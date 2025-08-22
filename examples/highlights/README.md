@@ -7,11 +7,11 @@
 
 Collection, dataset, or release specific, end-to-end examples that showcase particular Phase 3 products.
 Curated to highlight newly ingested datasets and how to work with them in practice
-(some may also connect to ESO press releases).
+(some may also connect to [ESO press releases](https://www.eso.org/public/news/)).
 
 ## Notebooks
 - **muse_ngc253_download_cutout_quicklook.ipynb**
-  - **MUSE NGC 253 large mosaic:** discover relevant products, download, make a SODA cutout, and produce a quick looks.
+  - **MUSE NGC 253 large mosaic:** discover relevant products, download, make a cutout, and produce quick looks.
   - 📦 [ADP.2025-07-06T07:52:11.871](https://archive.eso.org/dataset/ADP.2025-07-06T07:52:11.871): full-resolution MUSE mosaic data cube preview
   - 📊 [Ancillary DAP maps (~10 GB)](https://dataportal.eso.org/dataPortal/file/ADP.2025-07-06T07:52:11.876): emission-line fluxes (e.g. Hα, [N II], [S II]), stellar and gas kinematics, moment maps  
   - 📝 [Official data release description](https://www.eso.org/rm/api/v1/public/releaseDescriptions/236): documentation for the Phase 3 collection
