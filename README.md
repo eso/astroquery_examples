@@ -27,8 +27,8 @@ All notebooks live under `examples/` and are grouped by purpose:
 
 ```text
 examples/
-├── simple/       # 🌱 Minimal, single‑feature recipes (copy/paste friendly)
-├── advanced/     # 🚀 Scenario‑driven workflows combining multiple functions
+├── simple/         # 🌱 Minimal, single‑feature recipes (copy/paste friendly)
+├── advanced/       # 🚀 Scenario‑driven workflows combining multiple functions
 └── case_studies/   # 🌌 Curated case studies for specific Phase 3/data collections
 ```
 
