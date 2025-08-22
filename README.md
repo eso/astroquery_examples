@@ -3,6 +3,16 @@
   ESO Science Archive - Jupyter Notebooks
 </h1>
 
+---
+
+> ⚠️ **Work in Progress — Updated: 22 August 2025**  
+> These notebooks are **under active development**. While we aim for accuracy, we **cannot guarantee** that everything in this repository currently works as intended.  
+> Some functionality depends on features of `astroquery` that are **only available in the [ESO `develop` branch](https://github.com/eso/astroquery/tree/develop)**.  
+> Until these changes are merged into a stable release, please install `astroquery` directly from that branch to ensure compatibility.  
+> Features, functions, and outputs may change without notice. Please report any issues via GitHub.
+
+---
+
 # **Introduction**
 
 This repository contains a suite of Jupyter notebooks designed to demonstrate how to explore, query, and retrieve data from the [ESO Science Archive](https://archive.eso.org/cms.html) using Python. The primary interface used is the `astroquery.eso` module, which is part of the broader [astroquery](https://astroquery.readthedocs.io/en/latest/) package developed under the Astropy ecosystem.
