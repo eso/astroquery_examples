@@ -7,7 +7,7 @@
 
 > ⚠️ **Work in Progress — Updated: 22 August 2025**  
 > These notebooks are **under active development**. While we aim for accuracy, we **cannot guarantee** that everything in this repository currently works as intended.  
-> Some functionality depends on features of `astroquery` that are **only available in the [ESO `develop` branch](https://github.com/eso/astroquery/tree/develop)**.  
+> Some functionality depends on features of `astroquery` that are **only available in the [ESO astroquery fork](https://github.com/eso/astroquery.git)**.  
 > Until these changes are merged into a stable release, please install `astroquery` directly from that branch to ensure compatibility.  
 > Features, functions, and outputs may change without notice. Please report any issues via GitHub.
 
@@ -110,8 +110,15 @@ pip install "git+https://github.com/eso/astroquery.git"
 ## **Usage**  
 You can access this file as an interactive jupyter notebook, which you can download and run on your machine [(instructions)](https://jupyter.org/install). To interact with the jupyter notebook (if you have download it): move up and down the various cells using the arrow keys, execute the code by pressing CTRL+ENTER; you can also modify the code and execute it at will.
 
-## **Version** 
-Please note that this notebook uses Python version 3.9.21 and Jupyter Notebook version 6.4.10. Compatibility with other versions cannot be guaranteed.
+## **Version & Environment**
+
+These notebooks were tested with:
+
+- Python **3.13.5**
+- `astroquery` from the [ESO astroquery fork](https://github.com/eso/astroquery.git)
+- Common scientific libraries: `numpy`, `matplotlib`, `astropy`, `requests`, `tqdm`
+
+Other recent Python 3 versions may work, but compatibility is only guaranteed with the tested environment above.
 
 # 🤝 Contributing examples
 **Contributions are welcome!** 
