@@ -11,7 +11,7 @@ A guided tour of notebooks for working with the ESO Science Archive via `astroqu
 
 * **[`simple/`](./simple/)** — 🌱 Minimal, single-feature recipes (copy/paste friendly; quick to run).
 * **[`advanced/`](./advanced/)** — 🚀 Scenario-driven workflows that combine multiple functions.
-* **[`highlights/`](./highlights/)** — 🌌 Curated, collection-specific case studies (often tied to new Phase 3 collections/releases).
+* **[`case_studies/`](./case_studies/)** — 🌌 Curated, collection-specific case studies (often tied to new Phase 3 collections/releases).
 
 ## Start here
 

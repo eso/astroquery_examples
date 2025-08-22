@@ -3,7 +3,7 @@
   ESO Science Archive - Jupyter Notebooks
 </h1>
 
-# 🌌 Highlights (curated case studies or examples)
+# 🌌 Case Studies (curated case studies or examples)
 
 Collection, dataset, or release specific, end-to-end examples that showcase particular Phase 3 products.
 Curated to highlight newly ingested datasets and how to work with them in practice

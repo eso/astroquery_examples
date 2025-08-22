@@ -29,14 +29,14 @@ All notebooks live under `examples/` and are grouped by purpose:
 examples/
 ├── simple/       # 🌱 Minimal, single‑feature recipes (copy/paste friendly)
 ├── advanced/     # 🚀 Scenario‑driven workflows combining multiple functions
-└── highlights/   # 🌌 Curated case studies for specific Phase 3/data collections
+└── case_studies/   # 🌌 Curated case studies for specific Phase 3/data collections
 ```
 
 See detailed indexes inside each folder:
 
 - [`examples/simple/README.md`](examples/simple/README.md)
 - [`examples/advanced/README.md`](examples/advanced/README.md)
-- [`examples/highlights/README.md`](examples/highlights/README.md)
+- [`examples/case_studies/README.md`](examples/case_studies/README.md)
 
 ## ▶️ Quick Start: [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/git/https%3A%2F%2Fgithub.com%2Feso%2Fastroquery_examples/main?urlpath=%2Fdoc%2Ftree%2FESO_Introduction.ipynb)
 
