@@ -70,7 +70,7 @@ Split over:
 - [2.3 million spectra](https://archive.eso.org/scienceportal/home?dp_type=SPECTRUM) (1D extracted, fully calibrated)  
 - [950 000 imaging products](https://archive.eso.org/scienceportal/home?dp_type=IMAGE) in optical, near-IR, and sub-mm bands  
 - [650 000 spectral cubes](https://archive.eso.org/scienceportal/home?dp_type=CUBE) from IFU and radio/mm instruments  
-- [670 000 catalogue records](https://archive.eso.org/scienceportal/home?dp_type=CATALOG)
+- [700 000 catalogue files](https://archive.eso.org/scienceportal/home?dp_type=CATALOG)
 
 Processed data downloaded from the ESO Archive are assigned a Digital Object Identifier (DOI). You can browse the list of available DOIs [here](https://archive.eso.org/wdb/wdb/doi/collections/query).
 
