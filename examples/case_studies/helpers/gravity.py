@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import warnings
 import numpy as np
 import astropy.units as u
@@ -10,6 +11,10 @@ from astroquery.eso import Eso
 from PIL import Image
 from matplotlib import pyplot as plt
 import sys
+from pathlib import Path
+
+logger = logging.getLogger(__name__)
+
 
 def _normalize_product_ids(dp_id):
     if dp_id is None:
@@ -163,8 +168,6 @@ def prepare_eso(eso_export, ROW_LIMIT=None, **kwargs):
     return eso_instance
 
 
-from pathlib import Path
-
 def get_oifits_file_info(table, datadir="./data", eso=None, verbose=True):
     """
     Build local file URIs and archive URLs for OIFITS products.
@@ -260,10 +263,28 @@ def plot_preview(table_data, table_ancillary):
         ancillary_rows = table_ancillary[mask]
 
         if len(ancillary_rows) != 2:
-            print(f"Skipping {product_id}: expected 2 ancillary files, got {len(ancillary_rows)}")
+            print(
+                f"Skipping {product_id}: expected 2 ancillary files, "
+                f"got {len(ancillary_rows)}"
+            )
             continue
 
-        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(20, 10))
+        preview_files = []
+        for filename in ancillary_rows["filenames"]:
+            path = Path(str(filename)).expanduser()
+            if not path.exists():
+                warnings.warn(
+                    f"Skipping missing ancillary preview file for {product_id}: {filename}",
+                    stacklevel=2,
+                )
+                continue
+            preview_files.append(path)
+
+        if not preview_files:
+            continue
+
+        fig, axes = plt.subplots(1, len(preview_files), figsize=(10 * len(preview_files), 10))
+        axes = np.atleast_1d(axes)
 
         fig.suptitle(
             f"GRAVITY Data Previews – {product_id} – {target_name}",
@@ -272,14 +293,10 @@ def plot_preview(table_data, table_ancillary):
             y=0.9,
         )
 
-        img1 = Image.open(ancillary_rows["filenames"][0])
-        img2 = Image.open(ancillary_rows["filenames"][1])
-
-        ax1.imshow(img1)
-        ax2.imshow(img2)
-
-        ax1.axis("off")
-        ax2.axis("off")
+        for ax, filename in zip(axes, preview_files):
+            with Image.open(filename) as img:
+                ax.imshow(img.copy())
+            ax.axis("off")
 
         fig.tight_layout(w_pad=0)
         fig.subplots_adjust(wspace=-0.1)
@@ -322,6 +339,27 @@ def _format_dp_id_list(dp_ids):
     if not dp_ids:
         return "  (none)"
     return "\n".join(f"  - {dp_id}" for dp_id in dp_ids)
+
+
+def _normalize_dp_id_value(dp_id):
+    dp_id = str(dp_id).strip()
+    if dp_id.lower().endswith(".fits"):
+        dp_id = dp_id[:-5]
+    return dp_id
+
+
+def _insmode_parts(insmode):
+    return [part.strip().upper() for part in str(insmode).split(",")]
+
+
+def _is_single_dual_insmode_fallback(science_insmode, calibrator_insmode):
+    science_parts = _insmode_parts(science_insmode)
+    calibrator_parts = _insmode_parts(calibrator_insmode)
+    if len(science_parts) != len(calibrator_parts) or len(science_parts) < 2:
+        return False
+    if science_parts[1:] != calibrator_parts[1:]:
+        return False
+    return {science_parts[0], calibrator_parts[0]} == {"SINGLE", "DUAL"}
 
 
 def select_time_window(table, date_obs, window_hours=6, colname="DATE-OBS"):
@@ -460,7 +498,7 @@ def get_science_and_calibrator(
         )
 
     if dp_id is not None:
-        dp_id = str(dp_id).strip()
+        dp_id = _normalize_dp_id_value(dp_id)
         if not dp_id:
             raise ValueError("dp_id must be a non-empty product id string.")
         if dp_id not in set(table_target["dp_id"].astype(str)):
@@ -537,11 +575,6 @@ def get_science_and_calibrator(
     # Keep only calibrator entries
     table_calibrator_hrd = select_calibrators(table_calibrator_hrd)
 
-    # Match the instrument mode to the science observation
-    table_calibrator_hrd = table_calibrator_hrd[
-        table_calibrator_hrd["INSMODE"] == insmode
-    ]
-
     # Restrict to calibrators observed close in time
     table_calibrator_hrd = select_time_window(
         table_calibrator_hrd,
@@ -549,13 +582,54 @@ def get_science_and_calibrator(
         window_hours=window_hours,
     )
 
+    exact_insmode = table_calibrator_hrd["INSMODE"].astype(str) == str(insmode)
+    compatible_insmode = np.array(
+        [
+            _is_single_dual_insmode_fallback(insmode, calibrator_insmode)
+            for calibrator_insmode in table_calibrator_hrd["INSMODE"]
+        ],
+        dtype=bool,
+    )
+
+    table_calibrator_hrd_exact = table_calibrator_hrd[exact_insmode]
+    table_calibrator_hrd_compatible = table_calibrator_hrd[compatible_insmode]
+
+    if dp_id_cal is None:
+        if len(table_calibrator_hrd_exact) > 0:
+            table_calibrator_hrd = table_calibrator_hrd_exact
+        else:
+            if len(table_calibrator_hrd_compatible) > 0:
+                logger.info(
+                    "No exact INSMODE calibrator match for target %r with INSMODE %r; "
+                    "using calibrator candidates with compatible SINGLE/DUAL first-component "
+                    "mismatch and matching remaining INSMODE components.",
+                    target,
+                    insmode,
+                )
+            table_calibrator_hrd = table_calibrator_hrd_compatible
+    else:
+        table_calibrator_hrd = vstack(
+            [table_calibrator_hrd_exact, table_calibrator_hrd_compatible],
+            metadata_conflicts="silent",
+        )
+
     calibrator_dp_ids = [
         str(dp_id_candidate)
         for dp_id_candidate in table_calibrator_hrd[_dp_id_column(table_calibrator_hrd)]
     ]
+    exact_calibrator_dp_ids = {
+        str(dp_id_candidate)
+        for dp_id_candidate in table_calibrator_hrd_exact[_dp_id_column(table_calibrator_hrd_exact)]
+    }
+    compatible_calibrator_dp_ids = {
+        str(dp_id_candidate)
+        for dp_id_candidate in table_calibrator_hrd_compatible[
+            _dp_id_column(table_calibrator_hrd_compatible)
+        ]
+    }
 
     if dp_id_cal is not None:
-        dp_id_cal = str(dp_id_cal).strip()
+        dp_id_cal = _normalize_dp_id_value(dp_id_cal)
         if not dp_id_cal:
             raise ValueError("dp_id_cal must be a non-empty product id string.")
         if dp_id_cal not in calibrator_dp_ids:
@@ -564,6 +638,13 @@ def get_science_and_calibrator(
                 "among the matched calibrator candidates for this science "
                 f"target. Candidate calibrator dp_id values:\n"
                 f"{_format_dp_id_list(calibrator_dp_ids)}"
+            )
+        if dp_id_cal in compatible_calibrator_dp_ids and dp_id_cal not in exact_calibrator_dp_ids:
+            logger.info(
+                "Using explicitly selected calibrator %r with compatible SINGLE/DUAL "
+                "first-component INSMODE mismatch for target %r.",
+                dp_id_cal,
+                target,
             )
         table_calibrator_hrd = table_calibrator_hrd[
             table_calibrator_hrd[_dp_id_column(table_calibrator_hrd)].astype(str)
