@@ -6,8 +6,10 @@ import astropy.units as u
 from astropy.coordinates import SkyCoord
 from astropy.time import Time
 from astropy.table import vstack
+from astroquery.eso import Eso
 from PIL import Image
 from matplotlib import pyplot as plt
+import sys
 
 def _normalize_product_ids(dp_id):
     if dp_id is None:
@@ -296,6 +298,32 @@ def select_calibrators(table, colname="HIERARCH ESO PRO CATG", pattern="CAL"):
     return table[mask]
 
 
+def _dp_id_column(table):
+    for colname in ("dp_id", "DP.ID"):
+        if colname in table.colnames:
+            return colname
+    raise KeyError("Expected a product id column named 'dp_id' or 'DP.ID'.")
+
+
+def _science_dp_ids_from_headers(table_headers):
+    """
+    Return header DP.ID values not classified as calibrators.
+    """
+    dp_col = _dp_id_column(table_headers)
+    calibrator_ids = set(select_calibrators(table_headers)[dp_col].astype(str))
+    return [
+        str(dp_id)
+        for dp_id in table_headers[dp_col]
+        if str(dp_id) not in calibrator_ids
+    ]
+
+
+def _format_dp_id_list(dp_ids):
+    if not dp_ids:
+        return "  (none)"
+    return "\n".join(f"  - {dp_id}" for dp_id in dp_ids)
+
+
 def select_time_window(table, date_obs, window_hours=6, colname="DATE-OBS"):
     """
     Return rows within ±window_hours of the reference observation time.
@@ -308,12 +336,14 @@ def select_time_window(table, date_obs, window_hours=6, colname="DATE-OBS"):
 
 
 def get_science_and_calibrator(
-    eso,
-    target,
+    *args,
+    target=None,
     radius=20 * u.arcsec,
     window_hours=6,
     destination="./data/",
     survey="GRAVITY",
+    dp_id=None,
+    dp_id_cal=None,
     get_preview=True,
     show_preview=True,
 ):
@@ -322,16 +352,17 @@ def get_science_and_calibrator(
     download the selected files, and optionally retrieve/display ancillary
     preview products.
 
-    This function currently assumes that the archive query returns exactly one
-    science product for the target, and that the calibrator matching procedure
-    yields exactly one calibrator product. If either step returns zero or
-    multiple matches, a warning is raised and the function exits so that the
-    user can refine the selection manually.
+    This function assumes that the archive query returns exactly one science
+    product for the target unless `dp_id` is provided. When `dp_id` is provided,
+    it is used to select the science product from the target/radius search
+    results after checking that the product is not classified as a calibrator.
+    The calibrator matching procedure expects exactly one calibrator product
+    unless `dp_id_cal` is provided. If either step returns zero or multiple
+    matches, a warning is raised and the function exits so that the user can
+    refine the selection manually.
 
     Parameters
     ----------
-    eso : astroquery.eso.Eso
-        Initialised ESO query object.
     target : str
         Target name resolvable by `SkyCoord.from_name`.
     radius : astropy.units.Quantity, optional
@@ -342,6 +373,14 @@ def get_science_and_calibrator(
         Directory where files will be downloaded.
     survey : str, optional
         Survey/collection name to query. Default is "GRAVITY".
+    dp_id : str, optional
+        Science product id to select from the target/radius query results.
+        The product must belong to the target query and must not be classified
+        as a calibrator.
+    dp_id_cal : str, optional
+        Calibrator product id to select when the calibrator matching procedure
+        returns multiple candidates. The product must be one of the matched
+        calibrator candidates.
     get_preview : bool, optional
         If True, query and download ancillary preview products.
     show_preview : bool, optional
@@ -361,6 +400,25 @@ def get_science_and_calibrator(
         Associated ancillary preview table with local filenames if requested,
         otherwise None.
     """
+    if len(args) > 1 or (args and target is not None):
+        raise TypeError(
+            "get_science_and_calibrator() now creates its ESO query object "
+            "internally. Call it as get_science_and_calibrator(target=..., "
+            "radius=..., dp_id=...) without passing eso."
+        )
+    if args:
+        target = args[0]
+    if target is None:
+        raise TypeError("get_science_and_calibrator() missing required argument: 'target'")
+    if not isinstance(target, str):
+        raise TypeError(
+            "get_science_and_calibrator() now creates its ESO query object "
+            "internally. Call it as get_science_and_calibrator(target=..., "
+            "radius=..., dp_id=...) without passing eso."
+        )
+
+    eso = prepare_eso(Eso)
+
     # Resolve the target name to sky coordinates
     coords = SkyCoord.from_name(target)
     ra = coords.ra.deg
@@ -376,17 +434,90 @@ def get_science_and_calibrator(
         cone_radius=radius_deg,
     )
 
-    # This simple example expects exactly one science match
-    if len(table_target) != 1:
+    if len(table_target) == 0:
         warnings.warn(
             f"Expected exactly 1 science product for target '{target}', "
-            f"but found {len(table_target)}. "
-            "Please refine the target selection manually."
+            "but found 0. Please refine the target selection manually."
         )
         return None, None, None, None
 
-    # Retrieve detailed headers for the selected science product
     table_target_hrd = eso.get_headers(table_target["dp_id"])
+    science_dp_ids = _science_dp_ids_from_headers(table_target_hrd)
+
+    def _print_dp_id_list(dp_ids, title="Science candidate dp_id values"):
+        print("\n" + "=" * 80)
+        print(f"{title} ({len(dp_ids)}):")
+        print("=" * 80)
+        print(_format_dp_id_list(dp_ids))
+        print("=" * 80 + "\n")
+
+    def _selection_example(param_name, dp_ids):
+        if not dp_ids:
+            return ""
+        return (
+            " For example: "
+            f'get_science_and_calibrator(target=..., radius=..., {param_name}="{dp_ids[0]}")'
+        )
+
+    if dp_id is not None:
+        dp_id = str(dp_id).strip()
+        if not dp_id:
+            raise ValueError("dp_id must be a non-empty product id string.")
+        if dp_id not in set(table_target["dp_id"].astype(str)):
+            raise ValueError(
+                f"Science product dp_id '{dp_id}' was not found in the "
+                f"target/radius query results for '{target}'."
+            )
+        if dp_id not in science_dp_ids:
+            raise ValueError(
+                f"Product dp_id '{dp_id}' is classified as a calibrator by "
+                "select_calibrators() and cannot be used as the science target."
+            )
+        table_target = table_target[table_target["dp_id"].astype(str) == dp_id]
+        table_target_hrd = table_target_hrd[
+            table_target_hrd[_dp_id_column(table_target_hrd)].astype(str) == dp_id
+        ]
+
+    elif len(table_target) != 1:
+        warnings.warn(
+            f"Expected exactly 1 science product for target '{target}', "
+            f"but found {len(table_target)}. "
+            "Full candidate dp_id list printed below. "
+            "Please provide one of these with dp_id=... or refine the target "
+            f"selection manually.{_selection_example('dp_id', science_dp_ids)}",
+            stacklevel=2,
+        )
+        sys.stderr.flush()
+        sys.stdout.flush()
+
+        _print_dp_id_list(
+            science_dp_ids,
+            title="Science candidate dp_id values, excluding products classified as calibrators",
+        )
+
+        return None, None, None, None
+
+    elif len(science_dp_ids) != 1:
+        warnings.warn(
+            f"Expected exactly 1 science product for target '{target}', "
+            f"but found {len(science_dp_ids)} after excluding products classified "
+            "as calibrators by select_calibrators(). "
+            "Full candidate dp_id list printed below. "
+            "Please provide one of these with dp_id=... or refine the target "
+            f"selection manually.{_selection_example('dp_id', science_dp_ids)}",
+            stacklevel=2,
+        )
+        sys.stderr.flush()
+        sys.stdout.flush()
+
+        _print_dp_id_list(
+            science_dp_ids,
+            title="Science candidate dp_id values",
+        )
+
+        return None, None, None, None
+
+
 
     proposal_id = table_target["proposal_id"][0]
     obstech = table_target["obstech"][0]
@@ -418,18 +549,50 @@ def get_science_and_calibrator(
         window_hours=window_hours,
     )
 
-    # This simple example expects exactly one calibrator match
-    if len(table_calibrator_hrd) != 1:
+    calibrator_dp_ids = [
+        str(dp_id_candidate)
+        for dp_id_candidate in table_calibrator_hrd[_dp_id_column(table_calibrator_hrd)]
+    ]
+
+    if dp_id_cal is not None:
+        dp_id_cal = str(dp_id_cal).strip()
+        if not dp_id_cal:
+            raise ValueError("dp_id_cal must be a non-empty product id string.")
+        if dp_id_cal not in calibrator_dp_ids:
+            raise ValueError(
+                f"Calibrator product dp_id_cal '{dp_id_cal}' was not found "
+                "among the matched calibrator candidates for this science "
+                f"target. Candidate calibrator dp_id values:\n"
+                f"{_format_dp_id_list(calibrator_dp_ids)}"
+            )
+        table_calibrator_hrd = table_calibrator_hrd[
+            table_calibrator_hrd[_dp_id_column(table_calibrator_hrd)].astype(str)
+            == dp_id_cal
+        ]
+
+    elif len(table_calibrator_hrd) != 1:
         warnings.warn(
             f"Expected exactly 1 matching calibrator for target '{target}', "
             f"but found {len(table_calibrator_hrd)}. "
-            "Please refine the calibrator selection manually."
+            "Full candidate dp_id list printed below. "
+            "Please provide one of these with dp_id_cal=... or refine the "
+            f"calibrator selection manually.{_selection_example('dp_id_cal', calibrator_dp_ids)}",
+            stacklevel=2,
         )
+        sys.stderr.flush()
+        sys.stdout.flush()
+
+        _print_dp_id_list(
+            calibrator_dp_ids,
+            title="Calibrator candidate dp_id values",
+        )
+
         return table_target, None, None, None
 
     # Keep only the matched calibrator product
     table_calibrator = table_calibrator[
-        table_calibrator["dp_id"] == table_calibrator_hrd["DP.ID"][0]
+        table_calibrator["dp_id"].astype(str)
+        == str(table_calibrator_hrd[_dp_id_column(table_calibrator_hrd)][0])
     ]
 
     if len(table_calibrator) != 1:
