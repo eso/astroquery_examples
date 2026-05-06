@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import warnings
 import numpy as np
 import astropy.units as u
@@ -10,6 +11,10 @@ from astroquery.eso import Eso
 from PIL import Image
 from matplotlib import pyplot as plt
 import sys
+from pathlib import Path
+
+logger = logging.getLogger(__name__)
+
 
 def _normalize_product_ids(dp_id):
     if dp_id is None:
@@ -163,8 +168,6 @@ def prepare_eso(eso_export, ROW_LIMIT=None, **kwargs):
     return eso_instance
 
 
-from pathlib import Path
-
 def get_oifits_file_info(table, datadir="./data", eso=None, verbose=True):
     """
     Build local file URIs and archive URLs for OIFITS products.
@@ -249,6 +252,8 @@ def plot_preview(table_data, table_ancillary):
         The function produces plots but does not return any values.
     """
 
+    table_ancillary.sort("original_filename") # make sure that preview files are always in the same order (e.g. preview1, preview2) for consistent display
+
     count = 0
     for row in table_data:
 
@@ -260,10 +265,28 @@ def plot_preview(table_data, table_ancillary):
         ancillary_rows = table_ancillary[mask]
 
         if len(ancillary_rows) != 2:
-            print(f"Skipping {product_id}: expected 2 ancillary files, got {len(ancillary_rows)}")
+            print(
+                f"Skipping {product_id}: expected 2 ancillary files, "
+                f"got {len(ancillary_rows)}"
+            )
             continue
 
-        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(20, 10))
+        preview_files = []
+        for filename in ancillary_rows["filenames"]:
+            path = Path(str(filename)).expanduser()
+            if not path.exists():
+                warnings.warn(
+                    f"Skipping missing ancillary preview file for {product_id}: {filename}",
+                    stacklevel=2,
+                )
+                continue
+            preview_files.append(path)
+
+        if not preview_files:
+            continue
+
+        fig, axes = plt.subplots(1, len(preview_files), figsize=(10 * len(preview_files), 10))
+        axes = np.atleast_1d(axes)
 
         fig.suptitle(
             f"GRAVITY Data Previews – {product_id} – {target_name}",
@@ -272,14 +295,10 @@ def plot_preview(table_data, table_ancillary):
             y=0.9,
         )
 
-        img1 = Image.open(ancillary_rows["filenames"][0])
-        img2 = Image.open(ancillary_rows["filenames"][1])
-
-        ax1.imshow(img1)
-        ax2.imshow(img2)
-
-        ax1.axis("off")
-        ax2.axis("off")
+        for ax, filename in zip(axes, preview_files):
+            with Image.open(filename) as img:
+                ax.imshow(img.copy())
+            ax.axis("off")
 
         fig.tight_layout(w_pad=0)
         fig.subplots_adjust(wspace=-0.1)
@@ -324,6 +343,59 @@ def _format_dp_id_list(dp_ids):
     return "\n".join(f"  - {dp_id}" for dp_id in dp_ids)
 
 
+def _format_calibrator_dp_id_list(table, science_insmode, warning_ids):
+    if len(table) == 0:
+        return "  (none)"
+
+    dp_col = _dp_id_column(table)
+    lines = []
+    for row in table:
+        dp_id = str(row[dp_col])
+        line = f"  - {dp_id}"
+        if dp_id in warning_ids:
+            calibrator_field_mode = _insmode_parts(row["INSMODE"])[0]
+            science_field_mode = _insmode_parts(science_insmode)[0]
+            note = (
+                "calibrator/science in "
+                f"{calibrator_field_mode}/{science_field_mode} "
+                "field mode mismatch"
+            )
+            line += f" --> \033[33m{note}\033[0m"
+        lines.append(line)
+    return "\n".join(lines)
+
+
+def _normalize_dp_id_value(dp_id):
+    dp_id = str(dp_id).strip()
+    if dp_id.lower().endswith(".fits"):
+        dp_id = dp_id[:-5]
+    return dp_id
+
+
+def _insmode_parts(insmode):
+    return [part.strip().upper() for part in str(insmode).split(",")]
+
+
+def _is_dual_science_single_calibrator_fallback(science_insmode, calibrator_insmode):
+    science_parts = _insmode_parts(science_insmode)
+    calibrator_parts = _insmode_parts(calibrator_insmode)
+    if len(science_parts) != len(calibrator_parts) or len(science_parts) < 2:
+        return False
+    if science_parts[1:] != calibrator_parts[1:]:
+        return False
+    return science_parts[0] == "DUAL" and calibrator_parts[0] == "SINGLE"
+
+
+def _is_single_science_dual_calibrator_mismatch(science_insmode, calibrator_insmode):
+    science_parts = _insmode_parts(science_insmode)
+    calibrator_parts = _insmode_parts(calibrator_insmode)
+    if len(science_parts) != len(calibrator_parts) or len(science_parts) < 2:
+        return False
+    if science_parts[1:] != calibrator_parts[1:]:
+        return False
+    return science_parts[0] == "SINGLE" and calibrator_parts[0] == "DUAL"
+
+
 def select_time_window(table, date_obs, window_hours=6, colname="DATE-OBS"):
     """
     Return rows within ±window_hours of the reference observation time.
@@ -335,120 +407,83 @@ def select_time_window(table, date_obs, window_hours=6, colname="DATE-OBS"):
     return table[mask]
 
 
-def get_science_and_calibrator(
-    *args,
-    target=None,
-    radius=20 * u.arcsec,
+def _closest_time_row(table, date_obs, colname="DATE-OBS"):
+    t0 = Time(date_obs)
+    t = Time(table[colname])
+    dt = np.abs((t - t0).to("hour").value)
+    return table[np.argmin(dt):np.argmin(dt) + 1]
+
+
+def _row_colnames(row):
+    if hasattr(row, "colnames"):
+        return row.colnames
+    table = getattr(row, "table", None)
+    return getattr(table, "colnames", [])
+
+
+def _field_mode_from_insmode(insmode):
+    parts = _insmode_parts(insmode)
+    if parts and parts[0] in {"SINGLE", "DUAL"}:
+        return parts[0]
+    return None
+
+
+def get_calibrator(
+    dp_id,
     window_hours=6,
     destination="./data/",
     survey="GRAVITY",
-    dp_id=None,
     dp_id_cal=None,
-    get_preview=True,
-    show_preview=True,
 ):
     """
-    Find a GRAVITY science product for a target, identify a matching calibrator,
-    download the selected files, and optionally retrieve/display ancillary
-    preview products.
-
-    This function assumes that the archive query returns exactly one science
-    product for the target unless `dp_id` is provided. When `dp_id` is provided,
-    it is used to select the science product from the target/radius search
-    results after checking that the product is not classified as a calibrator.
-    The calibrator matching procedure expects exactly one calibrator product
-    unless `dp_id_cal` is provided. If either step returns zero or multiple
-    matches, a warning is raised and the function exits so that the user can
-    refine the selection manually.
+    Find matching GRAVITY calibrator products for one or more science products.
 
     Parameters
     ----------
-    target : str
-        Target name resolvable by `SkyCoord.from_name`.
-    radius : astropy.units.Quantity, optional
-        Search radius around the target position.
+    dp_id : str or iterable
+        Science product id, or product ids, to use as the starting point. Values
+        may be strings, comma-separated strings, table columns, or other
+        iterables. A trailing ".fits" suffix is accepted and stripped.
     window_hours : float, optional
         Allowed time difference between science and calibrator observations.
     destination : str, optional
-        Directory where files will be downloaded.
+        Retained for compatibility with older notebook calls. This function no
+        longer downloads data.
     survey : str, optional
         Survey/collection name to query. Default is "GRAVITY".
-    dp_id : str, optional
-        Science product id to select from the target/radius query results.
-        The product must belong to the target query and must not be classified
-        as a calibrator.
-    dp_id_cal : str, optional
-        Calibrator product id to select when the calibrator matching procedure
-        returns multiple candidates. The product must be one of the matched
+    dp_id_cal : str or iterable, optional
+        Known calibrator product id, or ids, to select from the matched
         calibrator candidates.
-    get_preview : bool, optional
-        If True, query and download ancillary preview products.
-    show_preview : bool, optional
-        If True, display preview images. Only used if `get_preview=True`.
 
     Returns
     -------
-    table_target : astropy.table.Table or None
-        Selected science product table containing one row, or None if the
-        selection was ambiguous.
     table_calibrator : astropy.table.Table or None
-        Selected calibrator product table containing one row, or None if the
-        selection was ambiguous.
-    table_combined : astropy.table.Table or None
-        Combined science + calibrator table with local filenames, or None.
-    table_ancillary : astropy.table.Table or None
-        Associated ancillary preview table with local filenames if requested,
-        otherwise None.
+        Matching calibrator product rows, or None if no calibrator rows were
+        selected.
     """
-    if len(args) > 1 or (args and target is not None):
-        raise TypeError(
-            "get_science_and_calibrator() now creates its ESO query object "
-            "internally. Call it as get_science_and_calibrator(target=..., "
-            "radius=..., dp_id=...) without passing eso."
-        )
-    if args:
-        target = args[0]
-    if target is None:
-        raise TypeError("get_science_and_calibrator() missing required argument: 'target'")
-    if not isinstance(target, str):
-        raise TypeError(
-            "get_science_and_calibrator() now creates its ESO query object "
-            "internally. Call it as get_science_and_calibrator(target=..., "
-            "radius=..., dp_id=...) without passing eso."
-        )
+    del destination
 
-    eso = prepare_eso(Eso)
+    science_dp_ids = [
+        _normalize_dp_id_value(value)
+        for value in _normalize_product_ids(dp_id)
+    ]
+    science_dp_ids = [value for value in science_dp_ids if value]
+    if not science_dp_ids:
+        raise ValueError("dp_id must contain at least one science product id.")
 
-    # Resolve the target name to sky coordinates
-    coords = SkyCoord.from_name(target)
-    ra = coords.ra.deg
-    dec = coords.dec.deg
-    radius_deg = radius.to("deg").value
+    requested_calibrator_ids = {
+        _normalize_dp_id_value(value)
+        for value in _normalize_product_ids(dp_id_cal)
+    }
+    requested_calibrator_ids = {
+        value for value in requested_calibrator_ids if value
+    }
 
-    # Query science products near the target position
-    eso.ROW_LIMIT = None
-    table_target = eso.query_surveys(
-        survey,
-        cone_ra=ra,
-        cone_dec=dec,
-        cone_radius=radius_deg,
-    )
-
-    if len(table_target) == 0:
-        warnings.warn(
-            f"Expected exactly 1 science product for target '{target}', "
-            "but found 0. Please refine the target selection manually."
-        )
-        return None, None, None, None
-
-    table_target_hrd = eso.get_headers(table_target["dp_id"])
-    science_dp_ids = _science_dp_ids_from_headers(table_target_hrd)
-
-    def _print_dp_id_list(dp_ids, title="Science candidate dp_id values"):
+    def _print_dp_id_list(dp_ids, title, formatted_lines=None):
         print("\n" + "=" * 80)
         print(f"{title} ({len(dp_ids)}):")
         print("=" * 80)
-        print(_format_dp_id_list(dp_ids))
+        print(formatted_lines or _format_dp_id_list(dp_ids))
         print("=" * 80 + "\n")
 
     def _selection_example(param_name, dp_ids):
@@ -456,178 +491,266 @@ def get_science_and_calibrator(
             return ""
         return (
             " For example: "
-            f'get_science_and_calibrator(target=..., radius=..., {param_name}="{dp_ids[0]}")'
+            f'get_calibrator(dp_id=..., {param_name}="{dp_ids[0]}")'
         )
 
-    if dp_id is not None:
-        dp_id = str(dp_id).strip()
-        if not dp_id:
-            raise ValueError("dp_id must be a non-empty product id string.")
-        if dp_id not in set(table_target["dp_id"].astype(str)):
-            raise ValueError(
-                f"Science product dp_id '{dp_id}' was not found in the "
-                f"target/radius query results for '{target}'."
+    eso = prepare_eso(Eso)
+    eso.ROW_LIMIT = None
+
+    table_science_headers = eso.get_headers(science_dp_ids)
+    science_header_ids = set(_science_dp_ids_from_headers(table_science_headers))
+    calibrator_like_inputs = [
+        value for value in science_dp_ids if value not in science_header_ids
+    ]
+    if calibrator_like_inputs:
+        warnings.warn(
+            "Ignoring dp_id values classified as calibrators by "
+            f"select_calibrators(): {', '.join(calibrator_like_inputs)}",
+            stacklevel=2,
+        )
+
+    table_calibrators = []
+
+    for index, science_dp_id in enumerate(science_dp_ids, start=1):
+        print(f"Processing science dp_id {index}/{len(science_dp_ids)}: {science_dp_id}")
+
+        if science_dp_id not in science_header_ids:
+            continue
+
+        table_science = eso.query_surveys(
+            survey,
+            column_filters={"dp_id": science_dp_id},
+        )
+        if len(table_science) != 1:
+            warnings.warn(
+                f"Expected exactly 1 science product for dp_id '{science_dp_id}', "
+                f"but found {len(table_science)}. Skipping.",
+                stacklevel=2,
             )
-        if dp_id not in science_dp_ids:
-            raise ValueError(
-                f"Product dp_id '{dp_id}' is classified as a calibrator by "
-                "select_calibrators() and cannot be used as the science target."
+            continue
+
+        science_header = table_science_headers[
+            table_science_headers[_dp_id_column(table_science_headers)].astype(str)
+            == science_dp_id
+        ]
+        if len(science_header) != 1:
+            warnings.warn(
+                f"Expected exactly 1 science header for dp_id '{science_dp_id}', "
+                f"but found {len(science_header)}. Skipping.",
+                stacklevel=2,
             )
-        table_target = table_target[table_target["dp_id"].astype(str) == dp_id]
-        table_target_hrd = table_target_hrd[
-            table_target_hrd[_dp_id_column(table_target_hrd)].astype(str) == dp_id
+            continue
+
+        proposal_id = table_science["proposal_id"][0]
+        obstech = table_science["obstech"][0]
+        em_res_power = table_science["em_res_power"][0]
+        insmode = science_header["INSMODE"][0]
+        date_obs = science_header["DATE-OBS"][0]
+
+        column_filters = {
+            "proposal_id": f"like '{proposal_id}%'",
+            "obstech": obstech,
+            "em_res_power": em_res_power,
+        }
+        table_calibrator = eso.query_surveys(survey, column_filters=column_filters)
+        table_calibrator_hrd = eso.get_headers(table_calibrator["dp_id"])
+        table_calibrator_hrd = select_calibrators(table_calibrator_hrd)
+        table_calibrator_hrd = select_time_window(
+            table_calibrator_hrd,
+            date_obs,
+            window_hours=window_hours,
+        )
+
+        exact_insmode = table_calibrator_hrd["INSMODE"].astype(str) == str(insmode)
+        dual_science_single_calibrator = np.array(
+            [
+                _is_dual_science_single_calibrator_fallback(
+                    insmode,
+                    calibrator_insmode,
+                )
+                for calibrator_insmode in table_calibrator_hrd["INSMODE"]
+            ],
+            dtype=bool,
+        )
+        single_science_dual_calibrator = np.array(
+            [
+                _is_single_science_dual_calibrator_mismatch(
+                    insmode,
+                    calibrator_insmode,
+                )
+                for calibrator_insmode in table_calibrator_hrd["INSMODE"]
+            ],
+            dtype=bool,
+        )
+        table_calibrator_hrd_exact = table_calibrator_hrd[exact_insmode]
+        table_calibrator_hrd_compatible = table_calibrator_hrd[
+            dual_science_single_calibrator
+        ]
+        table_calibrator_hrd_rejected = table_calibrator_hrd[
+            single_science_dual_calibrator
         ]
 
-    elif len(table_target) != 1:
-        warnings.warn(
-            f"Expected exactly 1 science product for target '{target}', "
-            f"but found {len(table_target)}. "
-            "Full candidate dp_id list printed below. "
-            "Please provide one of these with dp_id=... or refine the target "
-            f"selection manually.{_selection_example('dp_id', science_dp_ids)}",
-            stacklevel=2,
+        display_calibrator_hrd = vstack(
+            [
+                table_calibrator_hrd_exact,
+                table_calibrator_hrd_compatible,
+                table_calibrator_hrd_rejected,
+            ],
+            metadata_conflicts="silent",
         )
-        sys.stderr.flush()
-        sys.stdout.flush()
-
-        _print_dp_id_list(
-            science_dp_ids,
-            title="Science candidate dp_id values, excluding products classified as calibrators",
+        display_calibrator_dp_ids = [
+            str(value)
+            for value in display_calibrator_hrd[_dp_id_column(display_calibrator_hrd)]
+        ]
+        compatible_calibrator_dp_ids = {
+            str(value)
+            for value in table_calibrator_hrd_compatible[
+                _dp_id_column(table_calibrator_hrd_compatible)
+            ]
+        }
+        exact_calibrator_dp_ids = {
+            str(value)
+            for value in table_calibrator_hrd_exact[
+                _dp_id_column(table_calibrator_hrd_exact)
+            ]
+        }
+        rejected_calibrator_dp_ids = {
+            str(value)
+            for value in table_calibrator_hrd_rejected[
+                _dp_id_column(table_calibrator_hrd_rejected)
+            ]
+        }
+        formatted_display_calibrator_dp_ids = _format_calibrator_dp_id_list(
+            display_calibrator_hrd,
+            science_insmode=insmode,
+            warning_ids=rejected_calibrator_dp_ids,
         )
 
-        return None, None, None, None
-
-    elif len(science_dp_ids) != 1:
-        warnings.warn(
-            f"Expected exactly 1 science product for target '{target}', "
-            f"but found {len(science_dp_ids)} after excluding products classified "
-            "as calibrators by select_calibrators(). "
-            "Full candidate dp_id list printed below. "
-            "Please provide one of these with dp_id=... or refine the target "
-            f"selection manually.{_selection_example('dp_id', science_dp_ids)}",
-            stacklevel=2,
-        )
-        sys.stderr.flush()
-        sys.stdout.flush()
-
-        _print_dp_id_list(
-            science_dp_ids,
-            title="Science candidate dp_id values",
+        automatically_allowed_calibrator_hrd = vstack(
+            [table_calibrator_hrd_exact, table_calibrator_hrd_compatible],
+            metadata_conflicts="silent",
         )
 
-        return None, None, None, None
-
-
-
-    proposal_id = table_target["proposal_id"][0]
-    obstech = table_target["obstech"][0]
-    em_res_power = table_target["em_res_power"][0]
-    insmode = table_target_hrd["INSMODE"][0]
-    date_obs = table_target_hrd["DATE-OBS"][0]
-
-    # Query possible calibrators with matching observing setup
-    column_filters = {
-        "proposal_id": f"like '{proposal_id}%'",
-        "obstech": obstech,
-        "em_res_power": em_res_power,
-    }
-    table_calibrator = eso.query_surveys(survey, column_filters=column_filters)
-    table_calibrator_hrd = eso.get_headers(table_calibrator["dp_id"])
-
-    # Keep only calibrator entries
-    table_calibrator_hrd = select_calibrators(table_calibrator_hrd)
-
-    # Match the instrument mode to the science observation
-    table_calibrator_hrd = table_calibrator_hrd[
-        table_calibrator_hrd["INSMODE"] == insmode
-    ]
-
-    # Restrict to calibrators observed close in time
-    table_calibrator_hrd = select_time_window(
-        table_calibrator_hrd,
-        date_obs,
-        window_hours=window_hours,
-    )
-
-    calibrator_dp_ids = [
-        str(dp_id_candidate)
-        for dp_id_candidate in table_calibrator_hrd[_dp_id_column(table_calibrator_hrd)]
-    ]
-
-    if dp_id_cal is not None:
-        dp_id_cal = str(dp_id_cal).strip()
-        if not dp_id_cal:
-            raise ValueError("dp_id_cal must be a non-empty product id string.")
-        if dp_id_cal not in calibrator_dp_ids:
-            raise ValueError(
-                f"Calibrator product dp_id_cal '{dp_id_cal}' was not found "
-                "among the matched calibrator candidates for this science "
-                f"target. Candidate calibrator dp_id values:\n"
-                f"{_format_dp_id_list(calibrator_dp_ids)}"
+        if requested_calibrator_ids:
+            table_calibrator_hrd = vstack(
+                [
+                    table_calibrator_hrd_exact,
+                    table_calibrator_hrd_compatible,
+                    table_calibrator_hrd_rejected,
+                ],
+                metadata_conflicts="silent",
             )
-        table_calibrator_hrd = table_calibrator_hrd[
-            table_calibrator_hrd[_dp_id_column(table_calibrator_hrd)].astype(str)
-            == dp_id_cal
+        else:
+            table_calibrator_hrd = automatically_allowed_calibrator_hrd
+
+        calibrator_dp_ids = [
+            str(value)
+            for value in table_calibrator_hrd[_dp_id_column(table_calibrator_hrd)]
         ]
 
-    elif len(table_calibrator_hrd) != 1:
-        warnings.warn(
-            f"Expected exactly 1 matching calibrator for target '{target}', "
-            f"but found {len(table_calibrator_hrd)}. "
-            "Full candidate dp_id list printed below. "
-            "Please provide one of these with dp_id_cal=... or refine the "
-            f"calibrator selection manually.{_selection_example('dp_id_cal', calibrator_dp_ids)}",
-            stacklevel=2,
-        )
-        sys.stderr.flush()
-        sys.stdout.flush()
+        if requested_calibrator_ids:
+            selected_calibrator_ids = [
+                value for value in calibrator_dp_ids
+                if value in requested_calibrator_ids
+            ]
+            if not selected_calibrator_ids:
+                warnings.warn(
+                    f"None of dp_id_cal={sorted(requested_calibrator_ids)} matched "
+                    f"calibrator candidates for science dp_id '{science_dp_id}'.",
+                    stacklevel=2,
+                )
+                _print_dp_id_list(
+                    display_calibrator_dp_ids,
+                    title=f"Calibrator candidate dp_id values for {science_dp_id}",
+                    formatted_lines=formatted_display_calibrator_dp_ids,
+                )
+                continue
 
-        _print_dp_id_list(
-            calibrator_dp_ids,
-            title="Calibrator candidate dp_id values",
-        )
+            for value in selected_calibrator_ids:
+                if value in compatible_calibrator_dp_ids and value not in exact_calibrator_dp_ids:
+                    logger.info(
+                        "Using explicitly selected calibrator %r with science "
+                        "DUAL and calibrator SINGLE field mode for science "
+                        "dp_id %r.",
+                        value,
+                        science_dp_id,
+                    )
 
-        return table_target, None, None, None
+                if value in rejected_calibrator_dp_ids:
+                    warnings.warn(
+                        f"Explicitly selected calibrator '{value}' has a "
+                        "calibrator/science DUAL/SINGLE field mode mismatch "
+                        f"for science dp_id '{science_dp_id}'.",
+                        stacklevel=2,
+                    )
 
-    # Keep only the matched calibrator product
-    table_calibrator = table_calibrator[
-        table_calibrator["dp_id"].astype(str)
-        == str(table_calibrator_hrd[_dp_id_column(table_calibrator_hrd)][0])
-    ]
+            table_calibrator_hrd = table_calibrator_hrd[
+                np.isin(
+                    table_calibrator_hrd[_dp_id_column(table_calibrator_hrd)].astype(str),
+                    selected_calibrator_ids,
+                )
+            ]
+        elif len(table_calibrator_hrd) == 0:
+            warnings.warn(
+                f"Expected exactly 1 matching calibrator for science dp_id "
+                f"'{science_dp_id}', but found 0. "
+                "Full candidate dp_id list printed below. "
+                "Please provide one of these with dp_id_cal=... or refine the "
+                "selection manually."
+                f"{_selection_example('dp_id_cal', display_calibrator_dp_ids)}",
+                stacklevel=2,
+            )
+            sys.stderr.flush()
+            sys.stdout.flush()
+            _print_dp_id_list(
+                display_calibrator_dp_ids,
+                title=f"Calibrator candidate dp_id values for {science_dp_id}",
+                formatted_lines=formatted_display_calibrator_dp_ids,
+            )
+            continue
 
-    if len(table_calibrator) != 1:
-        warnings.warn(
-            f"Expected exactly 1 calibrator product after matching, "
-            f"but found {len(table_calibrator)}. "
-            "Please refine the calibrator selection manually."
-        )
-        return table_target, None, None, None
+        elif len(table_calibrator_hrd) > 1:
+            table_calibrator_hrd = _closest_time_row(table_calibrator_hrd, date_obs)
+            closest_calibrator_id = str(
+                table_calibrator_hrd[_dp_id_column(table_calibrator_hrd)][0]
+            )
+            warnings.warn(
+                f"Expected exactly 1 matching calibrator for science dp_id "
+                f"'{science_dp_id}', but found {len(calibrator_dp_ids)}. "
+                "Full candidate dp_id list printed below. "
+                f"Automatically selected closest-in-time calibrator '{closest_calibrator_id}'. "
+                "Provide dp_id_cal=... to override this selection.",
+                stacklevel=2,
+            )
+            sys.stderr.flush()
+            sys.stdout.flush()
+            _print_dp_id_list(
+                display_calibrator_dp_ids,
+                title=f"Calibrator candidate dp_id values for {science_dp_id}",
+                formatted_lines=formatted_display_calibrator_dp_ids,
+            )
 
-    # Combine science and calibrator products and download them
-    table_combined = vstack([table_target, table_calibrator])
-    table_combined["filenames"] = eso.retrieve_data(
-        table_combined["dp_id"],
-        destination=destination,
-    )
+        selected_header_ids = {
+            str(value)
+            for value in table_calibrator_hrd[_dp_id_column(table_calibrator_hrd)]
+        }
+        table_selected_calibrators = table_calibrator[
+            np.isin(table_calibrator["dp_id"].astype(str), list(selected_header_ids))
+        ]
+        if len(table_selected_calibrators) != len(selected_header_ids):
+            warnings.warn(
+                f"Expected {len(selected_header_ids)} calibrator product row(s) "
+                f"after matching science dp_id '{science_dp_id}', but found "
+                f"{len(table_selected_calibrators)}. Skipping.",
+                stacklevel=2,
+            )
+            continue
 
-    table_ancillary = None
+        table_calibrators.append(table_selected_calibrators)
 
-    # Optionally query and download ancillary preview products
-    if get_preview:
-        table_ancillary = eso.query_ancillary(
-            table_combined["dp_id"],
-            column_filters={"eso_category": "ANCILLARY.PREVIEW"},
-        )
-        table_ancillary["filenames"] = eso.retrieve_data(
-            table_ancillary["archive_id"],
-            destination=destination,
-        )
-
-        # Optionally display the preview images
-        if show_preview:
-            plot_preview(table_combined, table_ancillary)
-
-    return table_target, table_calibrator, table_combined, table_ancillary
+    if not table_calibrators:
+        return None
+    return vstack(table_calibrators, metadata_conflicts="silent")
 
 
 from pathlib import Path
@@ -638,7 +761,7 @@ def write_viscal_sof(
     table_calibrator,
     datadir="./data",
     diameter_cat="M.GRAVITY.2020-06-10T12:25:17.246.fits",
-    filename="viscal.sof",
+    filename=None,
 ):
     """
     Create a viscal.sof file for GRAVITY `gravity_viscal`.
@@ -646,66 +769,126 @@ def write_viscal_sof(
     Parameters
     ----------
     table_target : astropy.table.Table
-        Table containing the science product (expects 1 row).
+        Table containing one or more science products.
     table_calibrator : astropy.table.Table
-        Table containing the calibrator product (expects 1 row).
+        Table containing one or more calibrator products. Rows are paired with
+        science rows by order.
     datadir : str or pathlib.Path, optional
         Directory where the FITS files are located.
     diameter_cat : str, optional
         Filename of the diameter catalog (e.g. 'M.GRAVITY....fits').
         If provided, it will be included as DIAMETER_CAT.
     filename : str, optional
-        Name of the SOF file to write.
+        Name of the SOF file to write. If omitted, files are named
+        ``viscal_{dp_id}.sof`` using the science product id. This argument is
+        only valid when writing a single SOF file.
+
+    Notes
+    -----
+    The SOF science/calibrator tags are derived from the first field of
+    ``INSMODE`` when available. If the input tables do not include ``INSMODE``,
+    the helper queries the ESO product headers for the needed product ids.
 
     Returns
     -------
-    sof_path : pathlib.Path
-        Path to the written SOF file.
+    sof_path : pathlib.Path or list[pathlib.Path]
+        Path to the written SOF file, or paths when multiple science/calibrator
+        pairs are provided.
     """
     datadir = Path(datadir)
-    sof_path = datadir / filename
 
-    # --- sanity checks ---
-    if len(table_target) != 1:
-        warnings.warn(f"Expected 1 science file, got {len(table_target)}")
-    if len(table_calibrator) != 1:
-        warnings.warn(f"Expected 1 calibrator file, got {len(table_calibrator)}")
+    if len(table_target) != len(table_calibrator):
+        raise ValueError(
+            "table_target and table_calibrator must contain the same number "
+            f"of rows; got {len(table_target)} science and "
+            f"{len(table_calibrator)} calibrator rows."
+        )
+    if len(table_target) == 0:
+        raise ValueError("table_target and table_calibrator must not be empty.")
+    if filename is not None and len(table_target) != 1:
+        raise ValueError("filename can only be used when writing one SOF file.")
 
-    sci_id = table_target["dp_id"][0]
-    cal_id = table_calibrator["dp_id"][0]
+    sof_paths = []
+    eso = None
+    field_mode_cache = {}
 
-    sci_file = f"{sci_id}.fits"
-    cal_file = f"{cal_id}.fits"
+    def _field_mode_for_row(row, dp_id):
+        nonlocal eso
 
-    lines = [
-        f"{sci_file}  SINGLE_SCI_VIS",
-        f"{cal_file}  SINGLE_CAL_VIS",
-    ]
+        for colname in ("INSMODE", "insmode"):
+            if colname in _row_colnames(row):
+                field_mode = _field_mode_from_insmode(row[colname])
+                if field_mode is not None:
+                    return field_mode
 
-    if diameter_cat is not None:
-        lines.append(f"{diameter_cat}  DIAMETER_CAT")
+        if dp_id not in field_mode_cache:
+            if eso is None:
+                eso = prepare_eso(Eso)
+            header = eso.get_headers([dp_id])
+            field_mode = None
+            if len(header) == 1 and "INSMODE" in header.colnames:
+                field_mode = _field_mode_from_insmode(header["INSMODE"][0])
+            if field_mode is None:
+                warnings.warn(
+                    f"Could not determine INSMODE field mode for dp_id '{dp_id}'. "
+                    "Using SINGLE in the SOF tag.",
+                    stacklevel=2,
+                )
+                field_mode = "SINGLE"
+            field_mode_cache[dp_id] = field_mode
 
-    # --- write file ---
-    with open(sof_path, "w") as f:
-        for line in lines:
-            f.write(line + "\n")
+        return field_mode_cache[dp_id]
 
-    print(f"Wrote SOF file: {sof_path}")
-    return sof_path
+    for target_row, calibrator_row in zip(table_target, table_calibrator):
+        sci_id = _normalize_dp_id_value(target_row["dp_id"])
+        cal_id = _normalize_dp_id_value(calibrator_row["dp_id"])
+        sci_field_mode = _field_mode_for_row(target_row, sci_id)
+        cal_field_mode = _field_mode_for_row(calibrator_row, cal_id)
+        if sci_field_mode == "SINGLE" and cal_field_mode == "DUAL":
+            warnings.warn(
+                "Writing SOF with calibrator/science in DUAL/SINGLE "
+                f"field mode mismatch for science dp_id '{sci_id}' and "
+                f"calibrator dp_id '{cal_id}'.",
+                stacklevel=2,
+            )
+
+        sof_filename = filename or f"viscal_{sci_id}.sof"
+        sof_path = datadir / sof_filename
+
+        sci_file = f"{sci_id}.fits"
+        cal_file = f"{cal_id}.fits"
+
+        lines = [
+            f"{sci_file}  {sci_field_mode}_SCI_VIS",
+            f"{cal_file}  {cal_field_mode}_CAL_VIS",
+        ]
+
+        if diameter_cat is not None:
+            lines.append(f"{diameter_cat}  DIAMETER_CAT")
+
+        with open(sof_path, "w") as f:
+            for line in lines:
+                f.write(line + "\n")
+
+        print(f"Wrote SOF file: {sof_path}")
+        sof_paths.append(sof_path)
+
+    return sof_paths[0] if len(sof_paths) == 1 else sof_paths
 
 import subprocess
 from pathlib import Path
 
 
 def run_gravity_viscal(
-    sof_file="viscal.sof",
+    dp_id=None,
+    sof_file=None,
     datadir="./data",
     esorex_path="/opt/local/bin/esorex",
     force_calib=True,
     verbose=True,
 ):
     """
-    Run the ESO GRAVITY calibration pipeline (`gravity_viscal`) on a given SOF file.
+    Run the ESO GRAVITY calibration pipeline (`gravity_viscal`) on SOF files.
 
     This function wraps the `esorex gravity_viscal` command and executes it
     within a specified working directory. It constructs the appropriate command,
@@ -713,8 +896,11 @@ def run_gravity_viscal(
 
     Parameters
     ----------
-    sof_file : str, optional
-        Name of the SOF file describing the input data (default: "viscal.sof").
+    dp_id : str, astropy.table.Table, or iterable, optional
+        Science product id(s), or a table containing a ``dp_id`` column. Used to
+        infer SOF names of the form ``viscal_{dp_id}.sof``.
+    sof_file : str or iterable, optional
+        Explicit SOF file name(s). If omitted, ``dp_id`` is required.
     datadir : str or pathlib.Path, optional
         Directory containing the SOF file and input FITS products. The pipeline
         is executed in this directory (default: "./data").
@@ -730,9 +916,8 @@ def run_gravity_viscal(
 
     Returns
     -------
-    subprocess.CompletedProcess
-        Result object containing the command execution details, including
-        stdout, stderr, and return code.
+    subprocess.CompletedProcess or list[subprocess.CompletedProcess]
+        Result object(s) containing command execution details.
 
     Raises
     ------
@@ -743,40 +928,60 @@ def run_gravity_viscal(
     -----
     This is equivalent to running the following command in a terminal:
 
-        esorex gravity_viscal --force-calib=true viscal.sof
+        esorex gravity_viscal --force-calib=true viscal_{dp_id}.sof
 
     The calibrated OIFITS products are written to the working directory.
     """
     datadir = Path(datadir)
+    if sof_file is None:
+        if dp_id is None:
+            raise ValueError("Provide dp_id or sof_file.")
+        if hasattr(dp_id, "colnames") and "dp_id" in dp_id.colnames:
+            dp_ids = [_normalize_dp_id_value(value) for value in dp_id["dp_id"]]
+        else:
+            dp_ids = [
+                _normalize_dp_id_value(value)
+                for value in _normalize_product_ids(dp_id)
+            ]
+        sof_files = [f"viscal_{value}.sof" for value in dp_ids if value]
+    else:
+        sof_files = _normalize_product_ids(sof_file)
 
-    cmd = [esorex_path, "gravity_viscal"]
+    if not sof_files:
+        raise ValueError("No SOF files to run.")
 
-    if force_calib:
-        cmd.append("--force-calib=true")
+    results = []
+    for current_sof_file in sof_files:
+        cmd = [esorex_path, "gravity_viscal"]
 
-    cmd.append(sof_file)
+        if force_calib:
+            cmd.append("--force-calib=true")
 
-    if verbose:
-        print("Running:", " ".join(cmd))
-        print(f"Working directory: {datadir.resolve()}")
+        cmd.append(current_sof_file)
 
-    result = subprocess.run(
-        cmd,
-        cwd=datadir,
-        capture_output=True,
-        text=True,
-    )
+        if verbose:
+            print("Running:", " ".join(cmd))
+            print(f"Working directory: {datadir.resolve()}")
 
-    if verbose:
-        print("\n--- STDOUT ---")
-        print(result.stdout)
-        print("\n--- STDERR ---")
-        print(result.stderr)
+        result = subprocess.run(
+            cmd,
+            cwd=datadir,
+            capture_output=True,
+            text=True,
+        )
 
-    if result.returncode != 0:
-        raise RuntimeError("gravity_viscal failed")
+        if verbose:
+            print("\n--- STDOUT ---")
+            print(result.stdout)
+            print("\n--- STDERR ---")
+            print(result.stderr)
 
-    return result
+        if result.returncode != 0:
+            raise RuntimeError(f"gravity_viscal failed for {current_sof_file}")
+
+        results.append(result)
+
+    return results[0] if len(results) == 1 else results
 
 
 from astropy.samp import SAMPIntegratedClient
@@ -815,3 +1020,40 @@ def sendOiFitsWithSAMP(filenames):
         print(" - OIFitsExplorer ( https://www.jmmc.fr/oifitsexplorer ) ")
         print(" - OImaging       ( https://www.jmmc.fr/oimaging ) - only use the last submitted oifits")
         print(" - LITpro         ( https://www.jmmc.fr/litpro ) ")
+
+
+def summarize_public(table, use_color=True):
+    now = Time.now()
+
+    date_col = table["obs_release_date"]
+    dp_ids = table["dp_id"]
+
+    # Convert MaskedColumn/object column safely to plain string array
+    dates = np.array(date_col.filled("2100-01-01T00:00:00Z"), dtype=str)
+
+    release = Time(dates, format="isot", scale="utc")
+    is_public = release < now
+
+    n_public = int(np.sum(is_public))
+    n_total = len(table)
+
+    print(f"Public: {n_public}/{n_total} | Restricted: {n_total - n_public}/{n_total}\n")
+
+    for dp, pub, date in zip(dp_ids, is_public, dates):
+        if pub:
+            status = "public"
+            if use_color:
+                status = f"\033[92m{status}\033[0m"
+        else:
+            status = f"restricted (until {date.split("Z")[0]})"
+            if use_color:
+                status = f"\033[91m{status}\033[0m"
+
+        print(f"{dp} --> {status}")
+
+    if n_public == n_total:
+        print("\nAll data products are public.")
+    elif n_public == 0:
+        print("\nNo data products are public and require authentication.")
+    elif n_public < n_total:
+        print(f"\n{n_total - n_public} data products are not public and require authentication.")
