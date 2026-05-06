@@ -1020,3 +1020,40 @@ def sendOiFitsWithSAMP(filenames):
         print(" - OIFitsExplorer ( https://www.jmmc.fr/oifitsexplorer ) ")
         print(" - OImaging       ( https://www.jmmc.fr/oimaging ) - only use the last submitted oifits")
         print(" - LITpro         ( https://www.jmmc.fr/litpro ) ")
+
+
+def summarize_public(table, use_color=True):
+    now = Time.now()
+
+    date_col = table["obs_release_date"]
+    dp_ids = table["dp_id"]
+
+    # Convert MaskedColumn/object column safely to plain string array
+    dates = np.array(date_col.filled("2100-01-01T00:00:00Z"), dtype=str)
+
+    release = Time(dates, format="isot", scale="utc")
+    is_public = release < now
+
+    n_public = int(np.sum(is_public))
+    n_total = len(table)
+
+    print(f"Public: {n_public}/{n_total} | Restricted: {n_total - n_public}/{n_total}\n")
+
+    for dp, pub, date in zip(dp_ids, is_public, dates):
+        if pub:
+            status = "public"
+            if use_color:
+                status = f"\033[92m{status}\033[0m"
+        else:
+            status = f"restricted (until {date.split("Z")[0]})"
+            if use_color:
+                status = f"\033[91m{status}\033[0m"
+
+        print(f"{dp} --> {status}")
+
+    if n_public == n_total:
+        print("\nAll data products are public.")
+    elif n_public == 0:
+        print("\nNo data products are public and require authentication.")
+    elif n_public < n_total:
+        print(f"\n{n_total - n_public} data products are not public and require authentication.")
