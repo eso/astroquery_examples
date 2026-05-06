@@ -1,126 +1,168 @@
 
-Start time     : 2026-04-28T11:30:49
+Start time     : 2026-05-06T14:18:03
 Program name   : esorex
 Severity level : [ INFO  ] 
 
-11:30:49 [ INFO  ] : This is EsoRex, version 3.13.10
-11:30:49 [ INFO  ] : using the libraries: CPL = 7.3.2, CFITSIO = 4.4.1, WCSLIB = 8.2.2, FFTW (normal precision) = 3.3.10, FFTW (single precision) = 3.3.10
-11:30:49 [ INFO  ] : Invocation command line was: /opt/local/bin/esorex gravity_viscal --force-calib=true viscal.sof
-11:30:49 [ INFO  ] gravity_print_banner: **********************************************
-11:30:49 [ INFO  ] gravity_print_banner:   Welcome to GRAVITY Pipeline release 1.9.4
-11:30:49 [ INFO  ] gravity_print_banner:   Last rebuilt at Jul 28 2025 11:10:45
-11:30:49 [ INFO  ] gravity_print_banner: **********************************************
-11:30:49 [ INFO  ] gravity_viscal: Start function gravity_viscal
-11:30:49 [ INFO  ] gravi_data_load_frame: Load file M.GRAVITY.2020-06-10T12:25:17.246.fits (DIAMETER_CAT)
-11:30:52 [ INFO  ] gravity_viscal: *** Compute TF 1 over 1 ***
-11:30:52 [ INFO  ] gravi_data_load_frame: Load file ADP.2025-12-24T13:09:34.519.fits (SINGLE_CAL_VIS)
-11:30:52 [ INFO  ] gravi_data_dump_mode: (insmode: HIGH COMBINED COMBINED)
-11:30:52 [ INFO  ] gravi_compute_tf: Start function gravi_compute_tf
-11:30:52 [ INFO  ] gravi_data_duplicate: Start function gravi_data_duplicate
-11:30:52 [ INFO  ] gravi_data_duplicate: Exit function gravi_data_duplicate (0.001604 s)
-11:30:52 [ INFO  ] gravi_compute_tf: Find match in DIAMETER_CAT (best sep=0.02 arcsec)
-11:30:52 [ INFO  ] gravi_compute_tf: Diameter for SC target: 0.621 (+-0.010) mas
-11:30:52 [ INFO  ] gravi_compute_tf: Use ATs
-11:30:52 [ INFO  ] gravi_compute_tf: Use Kmag=4.44 for QC.TRANS
-11:30:52 [ INFO  ] gravi_compute_tf: ESO QC TF TRANS_SC1 = 1.07%
-11:30:52 [ INFO  ] gravi_compute_tf: ESO QC TF TRANS_SC2 = 0.82%
-11:30:52 [ INFO  ] gravi_compute_tf: ESO QC TF TRANS_SC3 = 0.80%
-11:30:52 [ INFO  ] gravi_compute_tf: ESO QC TF TRANS_SC4 = 1.01%
-11:30:52 [ INFO  ] gravi_compute_tf: Find match in DIAMETER_CAT (best sep=0.02 arcsec)
-11:30:52 [ INFO  ] gravi_compute_tf: Diameter for FT target: 0.621 (+-0.010) mas
-11:30:52 [ INFO  ] gravi_compute_tf: Use ATs
-11:30:52 [ INFO  ] gravi_compute_tf: Use Kmag=4.44 for QC.TRANS
-11:30:52 [ INFO  ] gravi_compute_tf: ESO QC TF TRANS_FT1 = 0.86%
-11:30:52 [ INFO  ] gravi_compute_tf: ESO QC TF TRANS_FT2 = 0.82%
-11:30:52 [ INFO  ] gravi_compute_tf: ESO QC TF TRANS_FT3 = 0.82%
-11:30:52 [ INFO  ] gravi_compute_tf: ESO QC TF TRANS_FT4 = 0.71%
-11:30:52 [ INFO  ] gravi_compute_tf: Exit function gravi_compute_tf (0.108521 s)
-11:30:52 [ INFO  ] gravi_vis_smooth: Start function gravi_vis_smooth
-11:30:52 [ INFO  ] gravi_vis_flag_nan: Start function gravi_vis_flag_nan
-11:30:52 [ INFO  ] gravi_vis_flag_nan: Exit function gravi_vis_flag_nan (0.000024 s)
-11:30:52 [ INFO  ] gravi_vis_smooth: Smoothing OIFITS2 FLUXDATA column
-11:30:52 [ INFO  ] gravi_vis_smooth_amp: Start function gravi_vis_smooth_amp
-11:30:52 [ INFO  ] gravi_vis_flag_nan: Start function gravi_vis_flag_nan
-11:30:52 [ INFO  ] gravi_vis_flag_nan: Check column VIS2DATA
-11:30:52 [ INFO  ] gravi_vis_flag_nan: Check column VIS2ERR
-11:30:52 [ INFO  ] gravi_vis_flag_nan: Exit function gravi_vis_flag_nan (0.000279 s)
-11:30:52 [ INFO  ] gravi_vis_smooth_amp: Start function gravi_vis_smooth_amp
-11:30:52 [ INFO  ] gravi_vis_fit_amp: Start function gravi_vis_fit_amp
-11:30:52 [ INFO  ] gravi_vis_fit_amp: Exit function gravi_vis_fit_amp (0.002362 s)
-11:30:52 [ INFO  ] gravi_vis_flag_nan: Start function gravi_vis_flag_nan
-11:30:52 [ INFO  ] gravi_vis_flag_nan: Check column VISAMP
-11:30:52 [ INFO  ] gravi_vis_flag_nan: Check column VISAMPERR
-11:30:52 [ INFO  ] gravi_vis_flag_nan: Check column VISPHI
-11:30:52 [ INFO  ] gravi_vis_flag_nan: Check column VISPHIERR
-11:30:52 [ INFO  ] gravi_vis_flag_nan: Exit function gravi_vis_flag_nan (0.000498 s)
-11:30:52 [ INFO  ] gravi_vis_smooth_amp: Start function gravi_vis_smooth_amp
-11:30:52 [ INFO  ] gravi_vis_smooth_phi: Start function gravi_vis_smooth_phi
-11:30:52 [ INFO  ] gravi_vis_fit_amp: Start function gravi_vis_fit_amp
-11:30:52 [ INFO  ] gravi_vis_fit_amp: Exit function gravi_vis_fit_amp (0.002081 s)
-11:30:52 [ INFO  ] gravi_vis_fit_amp: Start function gravi_vis_fit_amp
-11:30:52 [ INFO  ] gravi_vis_fit_amp: Exit function gravi_vis_fit_amp (0.002166 s)
-11:30:52 [ INFO  ] gravi_vis_smooth_amp: Start function gravi_vis_smooth_amp
-11:30:52 [ INFO  ] gravi_vis_smooth_amp: Start function gravi_vis_smooth_amp
-11:30:52 [WARNING] FIXME: ***********************************************
-11:30:52 [WARNING] FIXME:                                                
-11:30:52 [WARNING] FIXME:  VISDATA is not properly smooth !! 
-11:30:52 [WARNING] FIXME:                                                
-11:30:52 [WARNING] FIXME: ***********************************************
-11:30:52 [ INFO  ] gravi_vis_flag_nan: Start function gravi_vis_flag_nan
-11:30:52 [ INFO  ] gravi_vis_flag_nan: Check column T3PHI
-11:30:52 [ INFO  ] gravi_vis_flag_nan: Check column T3PHIERR
-11:30:52 [ INFO  ] gravi_vis_flag_nan: Check column T3AMP
-11:30:52 [ INFO  ] gravi_vis_flag_nan: Check column T3AMPERR
-11:30:52 [ INFO  ] gravi_vis_flag_nan: Exit function gravi_vis_flag_nan (0.000437 s)
-11:30:52 [ INFO  ] gravi_vis_smooth_amp: Start function gravi_vis_smooth_amp
-11:30:52 [ INFO  ] gravi_vis_smooth_phi: Start function gravi_vis_smooth_phi
-11:30:52 [ INFO  ] gravi_vis_fit_amp: Start function gravi_vis_fit_amp
-11:30:52 [ INFO  ] gravi_vis_fit_amp: Exit function gravi_vis_fit_amp (0.001374 s)
-11:30:52 [ INFO  ] gravi_vis_fit_amp: Start function gravi_vis_fit_amp
-11:30:52 [ INFO  ] gravi_vis_fit_amp: Exit function gravi_vis_fit_amp (0.001359 s)
-11:30:52 [ INFO  ] gravi_vis_smooth: Exit function gravi_vis_smooth (0.013754 s)
-11:30:52 [ INFO  ] gravi_plist_get_oifits_keywords: Start function gravi_plist_get_oifits_keywords
-11:30:52 [ INFO  ] gravi_plist_get_oifits_keywords: Exit function gravi_plist_get_oifits_keywords (0.000080 s)
-11:30:52 [ INFO  ] gravi_pfits_add_pipe_build: ESO PRO REC1 PIPE LAST_BUILD = 'Jul 28 2025 11:10:45'
-11:30:52 [ INFO  ] gravi_data_save_new: Save file to ADP.2025-12-24T13:09:34.519_singlecaltf.fits
-11:30:52 [ INFO  ] cpl_dfs_product_save: Writing FITS propertylist product(SINGLE_CAL_TF): ADP.2025-12-24T13:09:34.519_singlecaltf.fits
-11:30:52 [ INFO  ] gravity_viscal: *** Load already computed TF ***
-11:30:52 [ INFO  ] gravity_viscal: *** All TF computed or loaded ***
-11:30:52 [ INFO  ] gravity_viscal: Load or create successfully 1 TF over 1 input CAL files
-11:30:52 [ INFO  ] gravity_viscal: *** Calibration of file 1 over 1 ***
-11:30:52 [ INFO  ] gravi_data_load_frame: Load file ADP.2025-12-24T13:09:34.525.fits (SINGLE_SCI_VIS)
-11:30:52 [ INFO  ] gravi_data_dump_mode: (insmode: HIGH COMBINED COMBINED)
-11:30:52 [ INFO  ] gravi_data_duplicate: Start function gravi_data_duplicate
-11:30:52 [ INFO  ] gravi_data_duplicate: Exit function gravi_data_duplicate (0.001678 s)
-11:30:52 [ INFO  ] gravi_calibrate_vis: Start function gravi_calibrate_vis
-11:30:52 [ INFO  ] gravi_calibrate_vis: Number of possible TF: 1
-11:30:52 [ INFO  ] gravi_calibrate_vis: Delta time to interpolate the TF: 3600.000000 s (1.000000 h)
-11:30:52 [ INFO  ] gravi_calibrate_vis: Force calibration of the SCI by CALs: T
-11:30:52 [ INFO  ] gravi_calibrate_vis: Setup of SCIENCE:       HIGH COMBINED COMBINED 0.85ms 100.00s
-11:30:52 [ INFO  ] gravi_calibrate_vis: Setup of TF file:       HIGH COMBINED COMBINED 0.85ms 30.00s -> keep  (force_calib)
-11:30:52 [ INFO  ] gravi_data_duplicate: Start function gravi_data_duplicate
-11:30:52 [ INFO  ] gravi_data_duplicate: Exit function gravi_data_duplicate (0.001685 s)
-11:30:52 [ INFO  ] gravi_calibrate_vis: Exit function gravi_calibrate_vis (0.008691 s)
-11:30:52 [ INFO  ] gravity_viscal: Computing QC parameters for calibrated visibilities
-11:30:52 [ INFO  ] gravi_plist_get_oifits_keywords: Start function gravi_plist_get_oifits_keywords
-11:30:52 [ INFO  ] gravi_plist_get_oifits_keywords: Exit function gravi_plist_get_oifits_keywords (0.000064 s)
-11:30:52 [ INFO  ] gravi_pfits_add_pipe_build: ESO PRO REC1 PIPE LAST_BUILD = 'Jul 28 2025 11:10:45'
-11:30:52 [ INFO  ] gravi_data_save_new: Save file to ADP.2025-12-24T13:09:34.525_singlesciviscalibrated.fits
-11:30:52 [ INFO  ] cpl_dfs_product_save: Writing FITS propertylist product(SINGLE_SCI_VIS_CALIBRATED): ADP.2025-12-24T13:09:34.525_singlesciviscalibrated.fits
-11:30:52 [ INFO  ] gravi_plist_get_oifits_keywords: Start function gravi_plist_get_oifits_keywords
-11:30:52 [ INFO  ] gravi_plist_get_oifits_keywords: Exit function gravi_plist_get_oifits_keywords (0.000068 s)
-11:30:52 [ INFO  ] gravi_pfits_add_pipe_build: ESO PRO REC1 PIPE LAST_BUILD = 'Jul 28 2025 11:10:45'
-11:30:52 [ INFO  ] gravi_data_save_new: Save file to ADP.2025-12-24T13:09:34.525_singlescitf.fits
-11:30:52 [ INFO  ] cpl_dfs_product_save: Writing FITS propertylist product(SINGLE_SCI_TF): ADP.2025-12-24T13:09:34.525_singlescitf.fits
-11:30:52 [ INFO  ] gravity_viscal: Memory cleanup
-11:30:52 [ INFO  ] gravity_viscal: Exit function gravity_viscal (3.143134 s)
-11:30:52 [ INFO  ] : Calculating product checksums
-11:30:52 [ INFO  ] : Created product ADP.2025-12-24T13:09:34.519_singlecaltf.fits (in place)
-11:30:52 [ INFO  ] : Created product ADP.2025-12-24T13:09:34.525_singlesciviscalibrated.fits (in place)
-11:30:52 [ INFO  ] : Created product ADP.2025-12-24T13:09:34.525_singlescitf.fits (in place)
-11:30:52 [ INFO  ] : 3 products created
-11:30:52 [ INFO  ] : Recipe operation(s) took           3.58 seconds to complete.
-11:30:52 [ INFO  ] : Total size of 2 raw input frames  =    38.37 MB
+14:18:03 [ INFO  ] : This is EsoRex, version 3.13.10
+14:18:03 [ INFO  ] : using the libraries: CPL = 7.3.2, CFITSIO = 4.4.1, WCSLIB = 8.2.2, FFTW (normal precision) = 3.3.10, FFTW (single precision) = 3.3.10
+14:18:03 [ INFO  ] : Invocation command line was: /opt/local/bin/esorex gravity_viscal --force-calib=true viscal_ADP.2025-12-18T13:16:13.416.sof
+14:18:03 [ INFO  ] gravity_print_banner: **********************************************
+14:18:03 [ INFO  ] gravity_print_banner:   Welcome to GRAVITY Pipeline release 1.9.4
+14:18:03 [ INFO  ] gravity_print_banner:   Last rebuilt at Jul 28 2025 11:10:45
+14:18:03 [ INFO  ] gravity_print_banner: **********************************************
+14:18:03 [ INFO  ] gravity_viscal: Start function gravity_viscal
+14:18:03 [ INFO  ] gravi_data_load_frame: Load file M.GRAVITY.2020-06-10T12:25:17.246.fits (DIAMETER_CAT)
+14:18:05 [ INFO  ] gravity_viscal: *** Compute TF 1 over 1 ***
+14:18:05 [ INFO  ] gravi_data_load_frame: Load file ADP.2025-12-18T13:16:13.413.fits (SINGLE_CAL_VIS)
+14:18:06 [ INFO  ] gravi_data_dump_mode: (insmode: HIGH SPLIT SPLIT)
+14:18:06 [ INFO  ] gravi_compute_tf: Start function gravi_compute_tf
+14:18:06 [ INFO  ] gravi_data_duplicate: Start function gravi_data_duplicate
+14:18:06 [ INFO  ] gravi_data_duplicate: Exit function gravi_data_duplicate (0.002884 s)
+14:18:06 [ INFO  ] gravi_compute_tf: Find match in DIAMETER_CAT (best sep=0.01 arcsec)
+14:18:06 [ INFO  ] gravi_compute_tf: Diameter for SC target: 2.751 (+-0.193) mas
+14:18:06 [ INFO  ] gravi_compute_tf: Use ATs
+14:18:06 [ INFO  ] gravi_compute_tf: Use Kmag=0.84 for QC.TRANS
+14:18:06 [ INFO  ] gravi_compute_tf: ESO QC TF TRANS_SC1 = 1.01%
+14:18:06 [ INFO  ] gravi_compute_tf: ESO QC TF TRANS_SC2 = 0.86%
+14:18:06 [ INFO  ] gravi_compute_tf: ESO QC TF TRANS_SC3 = 0.89%
+14:18:06 [ INFO  ] gravi_compute_tf: ESO QC TF TRANS_SC4 = 0.87%
+14:18:06 [ INFO  ] gravi_compute_tf: Find match in DIAMETER_CAT (best sep=0.01 arcsec)
+14:18:06 [ INFO  ] gravi_compute_tf: Diameter for FT target: 2.751 (+-0.193) mas
+14:18:06 [ INFO  ] gravi_compute_tf: Use ATs
+14:18:06 [ INFO  ] gravi_compute_tf: Use Kmag=0.84 for QC.TRANS
+14:18:06 [ INFO  ] gravi_compute_tf: ESO QC TF TRANS_FT1 = 0.80%
+14:18:06 [ INFO  ] gravi_compute_tf: ESO QC TF TRANS_FT2 = 0.89%
+14:18:06 [ INFO  ] gravi_compute_tf: ESO QC TF TRANS_FT3 = 0.97%
+14:18:06 [ INFO  ] gravi_compute_tf: ESO QC TF TRANS_FT4 = 0.70%
+14:18:06 [ INFO  ] gravi_compute_tf: Exit function gravi_compute_tf (0.111145 s)
+14:18:06 [ INFO  ] gravi_vis_smooth: Start function gravi_vis_smooth
+14:18:06 [ INFO  ] gravi_vis_flag_nan: Start function gravi_vis_flag_nan
+14:18:06 [ INFO  ] gravi_vis_flag_nan: Exit function gravi_vis_flag_nan (0.000010 s)
+14:18:06 [ INFO  ] gravi_vis_smooth: Smoothing OIFITS2 FLUXDATA column
+14:18:06 [ INFO  ] gravi_vis_smooth_amp: Start function gravi_vis_smooth_amp
+14:18:06 [ INFO  ] gravi_vis_flag_nan: Start function gravi_vis_flag_nan
+14:18:06 [ INFO  ] gravi_vis_flag_nan: Check column VIS2DATA
+14:18:06 [ INFO  ] gravi_vis_flag_nan: Check column VIS2ERR
+14:18:06 [ INFO  ] gravi_vis_flag_nan: Exit function gravi_vis_flag_nan (0.000392 s)
+14:18:06 [ INFO  ] gravi_vis_smooth_amp: Start function gravi_vis_smooth_amp
+14:18:06 [ INFO  ] gravi_vis_fit_amp: Start function gravi_vis_fit_amp
+14:18:06 [ INFO  ] gravi_vis_fit_amp: Exit function gravi_vis_fit_amp (0.003319 s)
+14:18:06 [ INFO  ] gravi_vis_flag_nan: Start function gravi_vis_flag_nan
+14:18:06 [ INFO  ] gravi_vis_flag_nan: Check column VISAMP
+14:18:06 [ INFO  ] gravi_vis_flag_nan: Check column VISAMPERR
+14:18:06 [ INFO  ] gravi_vis_flag_nan: Check column VISPHI
+14:18:06 [ INFO  ] gravi_vis_flag_nan: Check column VISPHIERR
+14:18:06 [ INFO  ] gravi_vis_flag_nan: Exit function gravi_vis_flag_nan (0.000730 s)
+14:18:06 [ INFO  ] gravi_vis_smooth_amp: Start function gravi_vis_smooth_amp
+14:18:06 [ INFO  ] gravi_vis_smooth_phi: Start function gravi_vis_smooth_phi
+14:18:06 [ INFO  ] gravi_vis_fit_amp: Start function gravi_vis_fit_amp
+14:18:06 [ INFO  ] gravi_vis_fit_amp: Exit function gravi_vis_fit_amp (0.003215 s)
+14:18:06 [ INFO  ] gravi_vis_fit_amp: Start function gravi_vis_fit_amp
+14:18:06 [ INFO  ] gravi_vis_fit_amp: Exit function gravi_vis_fit_amp (0.003183 s)
+14:18:06 [ INFO  ] gravi_vis_smooth_amp: Start function gravi_vis_smooth_amp
+14:18:06 [ INFO  ] gravi_vis_smooth_amp: Start function gravi_vis_smooth_amp
+14:18:06 [WARNING] FIXME: ***********************************************
+14:18:06 [WARNING] FIXME:                                                
+14:18:06 [WARNING] FIXME:  VISDATA is not properly smooth !! 
+14:18:06 [WARNING] FIXME:                                                
+14:18:06 [WARNING] FIXME: ***********************************************
+14:18:06 [ INFO  ] gravi_vis_flag_nan: Start function gravi_vis_flag_nan
+14:18:06 [ INFO  ] gravi_vis_flag_nan: Check column T3PHI
+14:18:06 [ INFO  ] gravi_vis_flag_nan: Check column T3PHIERR
+14:18:06 [ INFO  ] gravi_vis_flag_nan: Check column T3AMP
+14:18:06 [ INFO  ] gravi_vis_flag_nan: Check column T3AMPERR
+14:18:06 [ INFO  ] gravi_vis_flag_nan: Exit function gravi_vis_flag_nan (0.000512 s)
+14:18:06 [ INFO  ] gravi_vis_smooth_amp: Start function gravi_vis_smooth_amp
+14:18:06 [ INFO  ] gravi_vis_smooth_phi: Start function gravi_vis_smooth_phi
+14:18:06 [ INFO  ] gravi_vis_fit_amp: Start function gravi_vis_fit_amp
+14:18:06 [ INFO  ] gravi_vis_fit_amp: Exit function gravi_vis_fit_amp (0.002088 s)
+14:18:06 [ INFO  ] gravi_vis_fit_amp: Start function gravi_vis_fit_amp
+14:18:06 [ INFO  ] gravi_vis_fit_amp: Exit function gravi_vis_fit_amp (0.001993 s)
+14:18:06 [ INFO  ] gravi_vis_flag_nan: Start function gravi_vis_flag_nan
+14:18:06 [ INFO  ] gravi_vis_flag_nan: Exit function gravi_vis_flag_nan (0.000030 s)
+14:18:06 [ INFO  ] gravi_vis_smooth: Smoothing OIFITS2 FLUXDATA column
+14:18:06 [ INFO  ] gravi_vis_smooth_amp: Start function gravi_vis_smooth_amp
+14:18:06 [ INFO  ] gravi_vis_flag_nan: Start function gravi_vis_flag_nan
+14:18:06 [ INFO  ] gravi_vis_flag_nan: Check column VIS2DATA
+14:18:06 [ INFO  ] gravi_vis_flag_nan: Check column VIS2ERR
+14:18:06 [ INFO  ] gravi_vis_flag_nan: Exit function gravi_vis_flag_nan (0.000391 s)
+14:18:06 [ INFO  ] gravi_vis_smooth_amp: Start function gravi_vis_smooth_amp
+14:18:06 [ INFO  ] gravi_vis_fit_amp: Start function gravi_vis_fit_amp
+14:18:06 [ INFO  ] gravi_vis_fit_amp: Exit function gravi_vis_fit_amp (0.003061 s)
+14:18:06 [ INFO  ] gravi_vis_flag_nan: Start function gravi_vis_flag_nan
+14:18:06 [ INFO  ] gravi_vis_flag_nan: Check column VISAMP
+14:18:06 [ INFO  ] gravi_vis_flag_nan: Check column VISAMPERR
+14:18:06 [ INFO  ] gravi_vis_flag_nan: Check column VISPHI
+14:18:06 [ INFO  ] gravi_vis_flag_nan: Check column VISPHIERR
+14:18:06 [ INFO  ] gravi_vis_flag_nan: Exit function gravi_vis_flag_nan (0.000660 s)
+14:18:06 [ INFO  ] gravi_vis_smooth_amp: Start function gravi_vis_smooth_amp
+14:18:06 [ INFO  ] gravi_vis_smooth_phi: Start function gravi_vis_smooth_phi
+14:18:06 [ INFO  ] gravi_vis_fit_amp: Start function gravi_vis_fit_amp
+14:18:06 [ INFO  ] gravi_vis_fit_amp: Exit function gravi_vis_fit_amp (0.003099 s)
+14:18:06 [ INFO  ] gravi_vis_fit_amp: Start function gravi_vis_fit_amp
+14:18:06 [ INFO  ] gravi_vis_fit_amp: Exit function gravi_vis_fit_amp (0.003146 s)
+14:18:06 [ INFO  ] gravi_vis_smooth_amp: Start function gravi_vis_smooth_amp
+14:18:06 [ INFO  ] gravi_vis_smooth_amp: Start function gravi_vis_smooth_amp
+14:18:06 [WARNING] FIXME: ***********************************************
+14:18:06 [WARNING] FIXME:                                                
+14:18:06 [WARNING] FIXME:  VISDATA is not properly smooth !! 
+14:18:06 [WARNING] FIXME:                                                
+14:18:06 [WARNING] FIXME: ***********************************************
+14:18:06 [ INFO  ] gravi_vis_flag_nan: Start function gravi_vis_flag_nan
+14:18:06 [ INFO  ] gravi_vis_flag_nan: Check column T3PHI
+14:18:06 [ INFO  ] gravi_vis_flag_nan: Check column T3PHIERR
+14:18:06 [ INFO  ] gravi_vis_flag_nan: Check column T3AMP
+14:18:06 [ INFO  ] gravi_vis_flag_nan: Check column T3AMPERR
+14:18:06 [ INFO  ] gravi_vis_flag_nan: Exit function gravi_vis_flag_nan (0.000442 s)
+14:18:06 [ INFO  ] gravi_vis_smooth_amp: Start function gravi_vis_smooth_amp
+14:18:06 [ INFO  ] gravi_vis_smooth_phi: Start function gravi_vis_smooth_phi
+14:18:06 [ INFO  ] gravi_vis_fit_amp: Start function gravi_vis_fit_amp
+14:18:06 [ INFO  ] gravi_vis_fit_amp: Exit function gravi_vis_fit_amp (0.002104 s)
+14:18:06 [ INFO  ] gravi_vis_fit_amp: Start function gravi_vis_fit_amp
+14:18:06 [ INFO  ] gravi_vis_fit_amp: Exit function gravi_vis_fit_amp (0.002114 s)
+14:18:06 [ INFO  ] gravi_vis_smooth: Exit function gravi_vis_smooth (0.036324 s)
+14:18:06 [ INFO  ] gravi_plist_get_oifits_keywords: Start function gravi_plist_get_oifits_keywords
+14:18:06 [ INFO  ] gravi_plist_get_oifits_keywords: Exit function gravi_plist_get_oifits_keywords (0.000050 s)
+14:18:06 [ INFO  ] gravi_pfits_add_pipe_build: ESO PRO REC1 PIPE LAST_BUILD = 'Jul 28 2025 11:10:45'
+14:18:06 [ INFO  ] gravi_data_save_new: Save file to ADP.2025-12-18T13:16:13.413_singlecaltf.fits
+14:18:06 [ INFO  ] cpl_dfs_product_save: Writing FITS propertylist product(SINGLE_CAL_TF): ADP.2025-12-18T13:16:13.413_singlecaltf.fits
+14:18:06 [ INFO  ] gravity_viscal: *** Load already computed TF ***
+14:18:06 [ INFO  ] gravity_viscal: *** All TF computed or loaded ***
+14:18:06 [ INFO  ] gravity_viscal: Load or create successfully 1 TF over 1 input CAL files
+14:18:06 [ INFO  ] gravity_viscal: *** Calibration of file 1 over 1 ***
+14:18:06 [ INFO  ] gravi_data_load_frame: Load file ADP.2025-12-18T13:16:13.416.fits (SINGLE_SCI_VIS)
+14:18:06 [ INFO  ] gravi_data_dump_mode: (insmode: HIGH SPLIT SPLIT)
+14:18:06 [ INFO  ] gravi_data_duplicate: Start function gravi_data_duplicate
+14:18:06 [ INFO  ] gravi_data_duplicate: Exit function gravi_data_duplicate (0.005634 s)
+14:18:06 [ INFO  ] gravi_calibrate_vis: Start function gravi_calibrate_vis
+14:18:06 [ INFO  ] gravi_calibrate_vis: Number of possible TF: 1
+14:18:06 [ INFO  ] gravi_calibrate_vis: Delta time to interpolate the TF: 3600.000000 s (1.000000 h)
+14:18:06 [ INFO  ] gravi_calibrate_vis: Force calibration of the SCI by CALs: T
+14:18:06 [ INFO  ] gravi_calibrate_vis: Setup of SCIENCE:       HIGH SPLIT SPLIT 0.84ms 0.30s
+14:18:06 [ INFO  ] gravi_calibrate_vis: Setup of TF file:       HIGH SPLIT SPLIT 0.84ms 1.00s -> keep  (force_calib)
+14:18:06 [ INFO  ] gravi_data_duplicate: Start function gravi_data_duplicate
+14:18:06 [ INFO  ] gravi_data_duplicate: Exit function gravi_data_duplicate (0.005503 s)
+14:18:06 [ INFO  ] gravi_calibrate_vis: Exit function gravi_calibrate_vis (0.052147 s)
+14:18:06 [ INFO  ] gravity_viscal: Computing QC parameters for calibrated visibilities
+14:18:06 [ INFO  ] gravi_plist_get_oifits_keywords: Start function gravi_plist_get_oifits_keywords
+14:18:06 [ INFO  ] gravi_plist_get_oifits_keywords: Exit function gravi_plist_get_oifits_keywords (0.000098 s)
+14:18:06 [ INFO  ] gravi_pfits_add_pipe_build: ESO PRO REC1 PIPE LAST_BUILD = 'Jul 28 2025 11:10:45'
+14:18:06 [ INFO  ] gravi_data_save_new: Save file to ADP.2025-12-18T13:16:13.416_singlesciviscalibrated.fits
+14:18:06 [ INFO  ] cpl_dfs_product_save: Writing FITS propertylist product(SINGLE_SCI_VIS_CALIBRATED): ADP.2025-12-18T13:16:13.416_singlesciviscalibrated.fits
+14:18:06 [ INFO  ] gravi_plist_get_oifits_keywords: Start function gravi_plist_get_oifits_keywords
+14:18:06 [ INFO  ] gravi_plist_get_oifits_keywords: Exit function gravi_plist_get_oifits_keywords (0.000076 s)
+14:18:06 [ INFO  ] gravi_pfits_add_pipe_build: ESO PRO REC1 PIPE LAST_BUILD = 'Jul 28 2025 11:10:45'
+14:18:06 [ INFO  ] gravi_data_save_new: Save file to ADP.2025-12-18T13:16:13.416_singlescitf.fits
+14:18:06 [ INFO  ] cpl_dfs_product_save: Writing FITS propertylist product(SINGLE_SCI_TF): ADP.2025-12-18T13:16:13.416_singlescitf.fits
+14:18:06 [ INFO  ] gravity_viscal: Memory cleanup
+14:18:06 [ INFO  ] gravity_viscal: Exit function gravity_viscal (3.479593 s)
+14:18:07 [ INFO  ] : Calculating product checksums
+14:18:07 [ INFO  ] : Created product ADP.2025-12-18T13:16:13.413_singlecaltf.fits (in place)
+14:18:07 [ INFO  ] : Created product ADP.2025-12-18T13:16:13.416_singlesciviscalibrated.fits (in place)
+14:18:07 [ INFO  ] : Created product ADP.2025-12-18T13:16:13.416_singlescitf.fits (in place)
+14:18:07 [ INFO  ] : 3 products created
+14:18:07 [ INFO  ] : Recipe operation(s) took           4.41 seconds to complete.
+14:18:07 [ INFO  ] : Total size of 2 raw input frames  =    98.84 MB
 
-11:30:52 [ INFO  ] : => processing rate of    10.71 MB/sec 
+14:18:07 [ INFO  ] : => processing rate of    22.40 MB/sec 
 
