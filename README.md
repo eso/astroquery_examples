@@ -38,7 +38,7 @@ See detailed indexes inside each folder:
 - [`examples/advanced/README.md`](examples/advanced/README.md)
 - [`examples/case_studies/README.md`](examples/case_studies/README.md)
 
-## ▶️ Quick Start: [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/git/https%3A%2F%2Fgithub.com%2Feso%2Fastroquery_examples/main?urlpath=%2Fdoc%2Ftree%2FESO_Introduction.ipynb)
+## ▶️ Quick Start: [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/git/https%3A%2F%2Fgithub.com%2Feso%2Fastroquery_examples/main?urlpath=%2Fdoc%2Ftree%2Fexamples%2Fsimple%2F00_quickstart.ipynb)
 
 To get started, you can load and initialize the ESO archive interface directly in your notebook:
 
@@ -48,9 +48,9 @@ eso = Eso()                     # Create an instance of the ESO class
 eso                             # Display the class instance (e.g. check login status, default settings)
 ```
 
-A simple overview script can be found in [`examples/simple/00_introduction.ipynb`](examples/simple/00_introduction.ipynb).
+A quick-start notebook can be found in [`examples/simple/00_quickstart.ipynb`](examples/simple/00_quickstart.ipynb).
 
-> **Tip:** You can try all the examples directly in [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/git/https%3A%2F%2Fgithub.com%2Feso%2Fastroquery_examples/main?urlpath=%2Fdoc%2Ftree%2FESO_Introduction.ipynb), without installing anything.
+> **Tip:** You can try all the examples directly in [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/git/https%3A%2F%2Fgithub.com%2Feso%2Fastroquery_examples/main?urlpath=%2Fdoc%2Ftree%2Fexamples%2Fsimple%2F00_quickstart.ipynb), without installing anything.
 
 Once initialized, you can search by program ID, target name, position, or instrument, and download data products directly into your working directory — all from within the notebook environment.
 

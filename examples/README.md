@@ -15,7 +15,7 @@ A guided tour of notebooks for working with the ESO Science Archive via `astroqu
 
 ## Start here
 
-1. **[`simple/00_introduction.ipynb`](./simple/00_introduction.ipynb)** — repo overview, how to run, common imports.
+1. **[`simple/00_quickstart.ipynb`](./simple/00_quickstart.ipynb)** — quick first workflow for setup, observation searches, optional downloads, and catalogues.
 
 ## Conventions
 
