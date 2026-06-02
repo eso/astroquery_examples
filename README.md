@@ -7,7 +7,7 @@
 
 > ⚠️ **Work in Progress — Updated: 22 August 2025**  
 > These notebooks are **under active development**. While we aim for accuracy, we **cannot guarantee** that everything in this repository currently works as intended.  
-> Some functionality depends on features of `astroquery` that are **only available in the [ESO astroquery fork](https://github.com/eso/astroquery.git)**.  
+> Some functionality depends on features of `astroquery` that are **only available in the [`develop-catalogues` branch of the ESO astroquery fork](https://github.com/eso/astroquery/tree/develop-catalogues)**.  
 > Until these changes are merged into a stable release, please install `astroquery` directly from that branch to ensure compatibility.  
 > Features, functions, and outputs may change without notice. Please report any issues via GitHub.
 
@@ -95,16 +95,16 @@ The scientific community plays a vital role in expanding and enriching the ESO S
 
 ## Prerequisites & Installation
 
-These notebooks may use newer `astroquery.eso` features. As such it is recommended to install the latest pre-release version of `astroquery` from the [ESO GitHub repository](https://github.com/eso/astroquery), available on the [ESO GitHub](https://github.com/eso). This can be done using `pip`:
+These notebooks may use newer `astroquery.eso` features. Binder and GitHub Codespaces install the shared environment from [`.binder/requirements.txt`](.binder/requirements.txt), using Python 3.12 and `astroquery` from the [`develop-catalogues` branch of the ESO GitHub repository](https://github.com/eso/astroquery/tree/develop-catalogues). For a local environment, use the same dependency file:
 
 ```bash
 # optional: create an isolated env
-conda create -n astroquery_eso python=3.13 -y
+conda create -n astroquery_eso python=3.12 -y
 conda activate astroquery_eso
 
-# install the latest astroquery from GitHub
+# install the notebook dependencies, including astroquery from the ESO develop-catalogues branch
 python -m pip install --upgrade pip
-pip install "git+https://github.com/eso/astroquery.git"
+pip install -r .binder/requirements.txt
 ``` 
 
 ## **Usage**  
@@ -114,9 +114,9 @@ You can access this file as an interactive jupyter notebook, which you can downl
 
 These notebooks were tested with:
 
-- Python **3.13.5**
-- `astroquery` from the [ESO astroquery fork](https://github.com/eso/astroquery.git)
-- Common scientific libraries: `numpy`, `matplotlib`, `astropy`, `requests`, `tqdm`
+- Python **3.12**
+- `astroquery` from the [`develop-catalogues` branch of the ESO astroquery fork](https://github.com/eso/astroquery/tree/develop-catalogues)
+- Common scientific libraries listed in [`.binder/requirements.txt`](.binder/requirements.txt), including `numpy`, `matplotlib`, `astropy`, `requests`, and `tqdm`
 
 Other recent Python 3 versions may work, but compatibility is only guaranteed with the tested environment above.
 
