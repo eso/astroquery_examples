@@ -85,7 +85,7 @@ There are four main ways to access the vast information in the ESO Archive:
 - [Catalogue Query Interface](https://www.eso.org/qi/) - Access PI-contributed catalogue data.
 - [Programmatic access page](http://archive.eso.org/programmatic/) - Direct, scriptable access to raw and processed data, metadata, ambient conditions, and catalogues via Virtual Observatory (VO) protocols.
 
-These notebooks focus on the last method: accessing the archive programmatically using the `astroquery.eso` module. Note that at present (May 2025), catalogue searches are not supported using the `astroquery.eso` module. Functionality for querying catalogues will be added in a future release.
+These notebooks focus on the last method: accessing the archive programmatically using the `astroquery.eso` module, including catalogue access through `list_catalogs()`, `query_catalog()`, and TAP-based catalogue queries.
 
 ## **Contributing your own data to the ESO archive**
 
