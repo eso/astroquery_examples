@@ -9,7 +9,7 @@ Small, self-contained notebooks that illustrate one `astroquery.eso` capability 
 Designed for quick copy/paste and minimal setup.
 
 ## Notebooks (suggested order)
-1. **00_introduction.ipynb** — What this repo covers, how to run the notebooks, and common imports. 
+1. **00_quickstart.ipynb** — Start with basic imports, raw and reduced observation searches, optional downloads, and a small catalogue query. 
 2. **01_authentication.ipynb** — Log in, store credentials securely, and test an authenticated query. 
 3. **02_query_observation_reduced_by_position.ipynb** — Find Phase 3 (reduced) data near a sky position.
 4. **03_query_observation_raw_by_position.ipynb** — Find raw data near a sky position; compare to reduced searches.
