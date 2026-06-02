@@ -1,4 +1,12 @@
-from .gravity import prepare_eso, get_science_and_calibrator, get_oifits_file_info, write_viscal_sof, run_gravity_viscal, sendOiFitsWithSAMP
+from .gravity import (
+    get_calibrator,
+    get_oifits_file_info,
+    prepare_eso,
+    run_gravity_viscal,
+    sendOiFitsWithSAMP,
+    summarize_public,
+    write_viscal_sof,
+)
 from .gw import (
     build_science_portal_urls_from_polygons,
     contour_to_polygon,
@@ -13,11 +21,12 @@ from .muse_cutout import get_cutout, get_wavelengthaxis
 
 __all__ = [
     "prepare_eso",
-    "get_science_and_calibrator",
+    "get_calibrator",
     "get_oifits_file_info",
     "write_viscal_sof",
     "run_gravity_viscal",
     "sendOiFitsWithSAMP",
+    "summarize_public",
     "download_gw_bayestar",
     "event_mjd_from_gw",
     "contours_from_gw",
