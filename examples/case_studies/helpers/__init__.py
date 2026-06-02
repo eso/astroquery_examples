@@ -9,6 +9,7 @@ from .gw import (
     show_contours_from_gw,
     show_xshooter_spectra_from_gw,
 )
+from .muse_cutout import get_cutout, get_wavelengthaxis
 
 __all__ = [
     "prepare_eso",
@@ -25,4 +26,6 @@ __all__ = [
     "contour_to_polygon",
     "contours_to_polygons",
     "build_science_portal_urls_from_polygons",
+    "get_cutout",
+    "get_wavelengthaxis",
 ]
