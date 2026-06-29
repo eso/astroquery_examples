@@ -12,9 +12,3 @@ pyvo
 requests
 ipykernel
 git+https://github.com/eso/astroquery.git@develop-catalogues
-
-ipywidgets==8.1.7
-jupyterlab_widgets==3.0.15
-widgetsnbextension==4.0.14
-jupyterlab>=4,<5
-notebook>=7,<8
