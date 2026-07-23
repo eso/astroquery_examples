@@ -21,3 +21,5 @@ tqdm
 PyAstronomy
 astral
 spherical-geometry
+healpy
+ligo.skymap

@@ -1045,7 +1045,7 @@ def summarize_public(table, use_color=True):
             if use_color:
                 status = f"\033[92m{status}\033[0m"
         else:
-            status = f"restricted (until {date.split("Z")[0]})"
+            status = f"restricted (until {date.split('Z')[0]})"
             if use_color:
                 status = f"\033[91m{status}\033[0m"
 
