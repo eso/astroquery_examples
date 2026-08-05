@@ -2,7 +2,7 @@
 # astroquery @ git+https://github.com/eso/astroquery.git@COMMIT_HASH
 
 # ------ a specific branch ------
-astroquery @ git+https://github.com/eso/astroquery.git@develop-catalogues
+astroquery @ git+https://github.com/astropy/astroquery.git@main
 
 # ------ official astroquery (pre-)release ------
 # astroquery==0.4.12.dev10885
