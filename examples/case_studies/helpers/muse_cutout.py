@@ -27,11 +27,14 @@ def _build_soda_url(dp_id, ra, dec, radius, wave_min=None, wave_max=None, prefix
     """
     Build the SODA sync URL for the ESO Data Portal.
 
-    CIRCLE is written as RA DEC RADIUS in degrees. BAND is written with lower
-    and upper wavelength bounds, typically in meters for these MUSE cutouts.
+    When supplied, CIRCLE is written as RA DEC RADIUS in degrees. BAND is
+    written with lower and upper wavelength bounds, typically in meters for
+    these MUSE cutouts.
     """
     base = "https://dataportal.eso.org/dataPortal/soda/sync"
-    parts = [f"ID={dp_id}", f"CIRCLE={ra}+{dec}+{radius}"]
+    parts = [f"ID={dp_id}"]
+    if ra is not None and dec is not None and radius is not None:
+        parts.append(f"CIRCLE={ra}+{dec}+{radius}")
     if wave_min is not None and wave_max is not None:
         parts.append(f"BAND={wave_min}+{wave_max}")
     if prefix:
@@ -75,9 +78,9 @@ def _content_length(url: str, timeout: int = 600) -> int | None:
 
 def get_cutout(
     dp_id,
-    ra,
-    dec,
-    radius,
+    ra=None,
+    dec=None,
+    radius=None,
     wave_min=None,
     wave_max=None,
     prefix=None,
@@ -99,10 +102,12 @@ def get_cutout(
     ----------
     dp_id : str
         ESO data product identifier.
-    ra, dec : float
-        Cutout centre in decimal degrees.
-    radius : float
-        Circular cutout radius in degrees.
+    ra, dec : float, optional
+        Cutout centre in decimal degrees. Omit together with ``radius`` to
+        request the full spatial extent of the product.
+    radius : float, optional
+        Circular cutout radius in degrees. Omit together with ``ra`` and
+        ``dec`` to request the full spatial extent of the product.
     wave_min, wave_max : float, optional
         Lower and upper wavelength bounds. For these MUSE products the values
         are supplied in meters.
@@ -132,7 +137,13 @@ def get_cutout(
     str
         Local filepath when ``download=True``; otherwise the constructed SODA URL.
     """
-    radius = float(np.round(radius, 6))
+    spatial_values = (ra, dec, radius)
+    if any(value is None for value in spatial_values) and not all(
+        value is None for value in spatial_values
+    ):
+        raise ValueError("ra, dec, and radius must either all be supplied or all be None.")
+    if radius is not None:
+        radius = float(np.round(radius, 6))
     url = _build_soda_url(dp_id, ra, dec, radius, wave_min, wave_max, prefix)
 
     if verbose:
@@ -155,7 +166,8 @@ def get_cutout(
         out_path = outdir / _sanitize_filename(f"{dp_id}.fits")
 
     if out_path.exists() and not overwrite:
-        raise FileExistsError(f"{out_path} exists (set overwrite=True to replace).")
+        # raise FileExistsError(f"{out_path} exists (set overwrite=True to replace).")
+        print(f"{out_path} exists (set overwrite=True to replace). Skipping download.")
 
     if progress_backend == "tqdm" and _HAS_TQDM:
         size = _content_length(url, timeout=timeout)
@@ -251,7 +263,10 @@ def get_wavelengthaxis(hdul, index=1):
     """
     hdr = hdul[index].header
     crval = hdr["CRVAL3"]
-    cdelt = hdr["CD3_3"]
+    try: 
+        cdelt = hdr["CD3_3"]
+    except: 
+        cdelt = hdr["CDELT3"]
     crpix = hdr["CRPIX3"]
     naxis = hdr["NAXIS3"]
     return crval + (np.arange(naxis) + 1 - crpix) * cdelt
