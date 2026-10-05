@@ -7,20 +7,20 @@ astroquery @ git+https://github.com/eso/astroquery.git@f6635a8720e5a0f53b4c6fae7
 # ------ official astroquery (pre-)release ------
 # astroquery==0.4.12.dev10885
 
+astral
 astropy
-numpy
-matplotlib
-pandas
-scipy
-requests
-Pillow
+healpy
 ipywidgets
 ipyaladin
-pyvo
-tqdm
-PyAstronomy
-astral
-spherical-geometry
-healpy
 ligo.skymap
+matplotlib
+numpy
+pandas
+Pillow
+PyAstronomy
+pyvo
 python-dotenv
+requests
+scipy
+spherical-geometry
+tqdm
