@@ -400,6 +400,8 @@ def select_time_window(table, date_obs, window_hours=6, colname="DATE-OBS"):
     """
     Return rows within ±window_hours of the reference observation time.
     """
+    if len(table) == 0:
+        return table
     t0 = Time(date_obs)
     t = Time(table[colname])
     dt = (t - t0).to("hour").value
@@ -467,7 +469,7 @@ def get_calibrator(
         _normalize_dp_id_value(value)
         for value in _normalize_product_ids(dp_id)
     ]
-    science_dp_ids = [value for value in science_dp_ids if value]
+    science_dp_ids = sorted(value for value in science_dp_ids if value)
     if not science_dp_ids:
         raise ValueError("dp_id must contain at least one science product id.")
 
