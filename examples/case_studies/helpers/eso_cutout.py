@@ -4,6 +4,7 @@ import os
 import shutil
 import tempfile
 from pathlib import Path
+from urllib.parse import urlencode
 
 import numpy as np
 import requests
@@ -23,20 +24,34 @@ def _sanitize_filename(name: str) -> str:
     return "".join("_" if c in bad else c for c in name)
 
 
-def _build_soda_url(dp_id, ra, dec, radius, wave_min=None, wave_max=None, prefix=None) -> str:
-    """
-    Build the SODA sync URL for the ESO Data Portal.
+ESO_SODA_SYNC = "https://dataportal.eso.org/dataPortal/soda/sync"
 
-    CIRCLE is written as RA DEC RADIUS in degrees. BAND is written with lower
-    and upper wavelength bounds, typically in meters for these MUSE cutouts.
+
+def _build_soda_url(
+    dp_id, ra=None, dec=None, radius=None, wave_min=None, wave_max=None, prefix=None
+) -> str:
     """
-    base = "https://dataportal.eso.org/dataPortal/soda/sync"
-    parts = [f"ID={dp_id}", f"CIRCLE={ra}+{dec}+{radius}"]
-    if wave_min is not None and wave_max is not None:
-        parts.append(f"BAND={wave_min}+{wave_max}")
+    Build an IVOA SODA sync URL for the ESO Data Portal.
+
+    The request uses the standard SODA parameters: ``ID``, an optional
+    ``POS=CIRCLE ra dec radius`` (degrees) and an optional ``BAND`` with lower
+    and upper spectral bounds in meters. ``PREFIX`` is an optional ESO-specific
+    parameter for the returned file name.
+    """
+    spatial = (ra, dec, radius)
+    if any(x is None for x in spatial) and not all(x is None for x in spatial):
+        raise ValueError("ra, dec, and radius must be supplied together")
+    if (wave_min is None) != (wave_max is None):
+        raise ValueError("wave_min and wave_max must be supplied together")
+
+    params = [("ID", str(dp_id))]
+    if radius is not None:
+        params.append(("POS", f"CIRCLE {ra} {dec} {radius}"))
+    if wave_min is not None:
+        params.append(("BAND", f"{wave_min} {wave_max}"))
     if prefix:
-        parts.append(f"PREFIX={prefix}")
-    return f"{base}?{'&'.join(parts)}"
+        params.append(("PREFIX", str(prefix)))
+    return f"{ESO_SODA_SYNC}?{urlencode(params)}"
 
 
 def _human_size(nbytes: int | None) -> str:
@@ -75,9 +90,9 @@ def _content_length(url: str, timeout: int = 600) -> int | None:
 
 def get_cutout(
     dp_id,
-    ra,
-    dec,
-    radius,
+    ra=None,
+    dec=None,
+    radius=None,
     wave_min=None,
     wave_max=None,
     prefix=None,
@@ -95,19 +110,23 @@ def get_cutout(
     """
     Request a cutout from the ESO Data Portal SODA service.
 
+    The service is not instrument-specific: any cube, image, spectrum or
+    catalogue product exposed through SODA can be cut spatially, spectrally,
+    or both. Omit ``ra``/``dec``/``radius`` for a spectral-only cutout, or
+    ``wave_min``/``wave_max`` for a spatial-only cutout.
+
     Parameters
     ----------
     dp_id : str
         ESO data product identifier.
-    ra, dec : float
+    ra, dec : float, optional
         Cutout centre in decimal degrees.
-    radius : float
+    radius : float, optional
         Circular cutout radius in degrees.
     wave_min, wave_max : float, optional
-        Lower and upper wavelength bounds. For these MUSE products the values
-        are supplied in meters.
+        Lower and upper spectral bounds in meters (SODA ``BAND``).
     prefix : str, optional
-        Optional SODA prefix parameter.
+        Optional ESO-specific ``PREFIX`` parameter for the returned file name.
     outdir : str or pathlib.Path, optional
         Output directory used when ``download=True``.
     outfile : str or pathlib.Path, optional
@@ -132,8 +151,9 @@ def get_cutout(
     str
         Local filepath when ``download=True``; otherwise the constructed SODA URL.
     """
-    radius = float(np.round(radius, 6))
-    url = _build_soda_url(dp_id, ra, dec, radius, wave_min, wave_max, prefix)
+    if radius is not None:
+        radius = float(np.round(radius, 6))
+    url =_build_soda_url(dp_id, ra, dec, radius, wave_min, wave_max, prefix)
 
     if verbose:
         print(f"Requesting cutout from URL: {url}")
