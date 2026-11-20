@@ -17,7 +17,7 @@ from .gw import (
     show_contours_from_gw,
     show_xshooter_spectra_from_gw,
 )
-from .muse_cutout import get_cutout, get_wavelengthaxis
+from .eso_cutout import get_cutout, get_wavelengthaxis
 
 __all__ = [
     "prepare_eso",
